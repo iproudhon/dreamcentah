@@ -41,17 +41,17 @@ function start ()
     [ -d "${DIR}" ] || die "${DIR} not found"
     [ -d "${DIR}/logs" ] || mkdir -p ${DIR}/logs
     stop
-    nohup ${GETH} --datadir ${DIR} --nodiscover --networkid ${CHAINID} > ${DIR}/logs/log &
+    nohup ${GETH} --datadir ${DIR} --nodiscover --networkid ${CHAINID} > ${DIR}/logs/log 2> /dev/null &
 }
 
 function stop ()
 {
     while true; do
-        GETHID=$(ps axww | grep -v grep | grep -q "geth --datadir")
+        GETHID=$(ps axww | grep -v grep | grep "geth --datadir" | awk '{print $1}')
         if [ "$GETHID" = "" ]; then
             break
         else
-            kill -HUP $GETHID
+            kill $GETHID
             sleep 1
         fi
     done
@@ -87,7 +87,7 @@ case "$1" in
     wipe;
     ;;
 "start-all")
-    [ "${NODES}" = "" ] || die "NODES is not defined"
+    [ "${NODES}" = "" ] && die "NODES is not defined"
     for i in ${NODES}; do
         if [ $i = $LHN ]; then
             start;
@@ -97,7 +97,7 @@ case "$1" in
     done
     ;;
 "stop-all")
-    [ "${NODES}" = "" ] || die "NODES is not defined"
+    [ "${NODES}" = "" ] && die "NODES is not defined"
     for i in ${NODES}; do
         if [ $i = $LHN ]; then
             stop;
@@ -105,6 +105,9 @@ case "$1" in
             ssh $i "${HOME}/eth/bin/geth.sh stop"
         fi
     done
+    ;;
+*)
+    usage;
     ;;
 esac
 
