@@ -80,7 +80,8 @@ case "$1" in
     clean;
     ;;
 "console")
-    ${GETH} attach ${DIR}/geth.ipc
+    [ -f ${DIR}/rc.js ] && RCJS="--preload ${DIR}/rc.js"
+    exec ${GETH} attach ${RCJS} ${DIR}/geth.ipc
     ;;
 "wipe")
     wipe;
