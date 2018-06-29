@@ -3,8 +3,10 @@
 if [ "${NODES}" = "" ]; then
     NODES="node1 node2 node3"
 fi
+CHAINID=15
 DIR=${HOME}/eth
 GETH=${DIR}/bin/geth
+LHN=$(hostname -s)
 
 function die ()
 {
@@ -22,7 +24,7 @@ function init ()
 
 function clean ()
 {
-    [ -d "${DIR}" ] || mkdir -p "${DIR}";
+    [ -d "${DIR}" ] || die "${DIR} not found"
     ${GETH} --datadir removedb
 }
 
@@ -36,10 +38,23 @@ function wipe ()
 
 function start ()
 {
+    [ -d "${DIR}" ] || die "${DIR} not found"
+    [ -d "${DIR}/logs" ] || mkdir -p ${DIR}/logs
+    stop
+    nohup ${GETH} --datadir ${DIR} --nodiscover --networkid ${CHAINID} > ${DIR}/logs/log &
 }
 
 function stop ()
 {
+    while true; do
+        GETHID=$(ps axww | grep -v grep | grep -q "geth --datadir")
+        if [ "$GETHID" = "" ]; then
+            break
+        else
+            kill -HUP $GETHID
+            sleep 1
+        fi
+    done
 }
 
 function usage ()
@@ -73,13 +88,21 @@ case "$1" in
 "start-all")
     [ "${NODES}" = "" ] || die "NODES is not defined"
     for i in ${NODES}; do
-        echo $i;
+        if [ $i = $LHN ]; then
+            start;
+        else
+            ssh $i "${HOME}/eth/bin/geth.sh start"
+        fi
     done
     ;;
 "stop-all")
     [ "${NODES}" = "" ] || die "NODES is not defined"
     for i in ${NODES}; do
-        echo $i;
+        if [ $i = $LHN ]; then
+            stop;
+        else
+            ssh $i "${HOME}/eth/bin/geth.sh stop"
+        fi
     done
     ;;
 esac
