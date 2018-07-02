@@ -59,8 +59,8 @@ END {
   }
 }
 
-# binary: 60606040 for contracts, 610eb861 for libraries
-/^610eb861|^60606040/ {
+# binary: 60.06040 for contracts, 610eb861 for libraries
+/^610eb861|^60.06040/ {
   if (length(code_name) > 0) {
     print "var " code_name "_data = \"0x" $0 "\";";
   }
