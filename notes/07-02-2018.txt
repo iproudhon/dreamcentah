@@ -9,6 +9,7 @@ Candidates:
 Python, JS, Java, Golang, Shell 
 
 Python: 
-Module - sys 
+sys module - to work with command line interface 
+os module - to work on the file directory io 
 
 
