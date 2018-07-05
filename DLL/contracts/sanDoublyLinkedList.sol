@@ -109,12 +109,53 @@ contract linkedLists
         length--;
     }
 
+    function remove(string targetkey) public returns (bool)
+    {
+        if(bytes(objects[targetkey].value).length == 0 || length == 0)
+        {
+            //if the key value is nonexistent or if list is empty
+            return false;
+        }
+        
+        if(length == 1)
+        {
+            delete objects[targetkey];
+            length--;
+            return true;
+        }
+        
+        if(keccak256(bytes(objects[targetkey].key)) == keccak256(bytes(head)))
+        {
+            head = objects[targetkey].next;
+            objects[head].prev = "NULL";
+            delete objects[targetkey];
+        }
+        
+        else if(keccak256(bytes(objects[targetkey].key)) == keccak256(bytes(tail)))
+        {
+            tail = objects[targetkey].prev;
+            objects[tail].next = "NULL";
+            delete objects[targetkey];
+        }
+        
+        else //if the entry is at neither the head or the tail of the list, at least 3 entries
+        {
+            string storage prevkey = objects[targetkey].prev;
+            string storage nextkey = objects[targetkey].next;
+            objects[prevkey].next = nextkey;
+            objects[nextkey].prev = prevkey;
+            delete objects[targetkey];
+        }
+        
+        length--;
+        return true;
+    }
 
     function front() public view returns (string)
     {
         if(length > 0)
         {
-            return objects[head].value;
+            return objects[head].key;
         }
     }
 
@@ -122,7 +163,7 @@ contract linkedLists
     {
         if(length > 0)
         {
-            return objects[tail].value;
+            return objects[tail].key;
         }
     }
 
