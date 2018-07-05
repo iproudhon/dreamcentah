@@ -1,16 +1,22 @@
 pragma solidity ^0.4.24;
 
-contract linkedLists
+import "./stringUtils.sol";
+
+contract sanDoublyLinkedList
 {
     struct node
     {
         string value;
+	string sorted_prev;
+	string sorted_next;
         string prev;
         string next;
         string key;
     }
 
     int public length = 0;
+    string public sorted_head;
+    string public sroted_tail; 
     string public head;
     string public tail;
 
@@ -114,7 +120,7 @@ contract linkedLists
     {
         if(length > 0)
         {
-            return objects[head].value;
+            return objects[head].key;
         }
     }
 
@@ -122,7 +128,7 @@ contract linkedLists
     {
         if(length > 0)
         {
-            return objects[tail].value;
+            return objects[tail].key;
         }
     }
 
@@ -143,4 +149,17 @@ contract linkedLists
     {
         return (objects[key].key, objects[key].value, objects[key].prev, objects[key].next);
     }
+
+    function getLength() public view returns (int) 
+    {
+        return length;
+    }
+    
+    function insert(string key, string value) public returns(bool) 
+    {
+        
+    }
+   
 }
+
+
