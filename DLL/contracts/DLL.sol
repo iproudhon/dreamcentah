@@ -21,7 +21,7 @@ contract DLL
 
     mapping(string=>node) private objects;
 
-    function compare(string _a, string _b) public returns (int) {
+    function compare(string _a, string _b) public pure returns (int) {
         bytes memory a = bytes(_a);
         bytes memory b = bytes(_b);
         uint minLength = a.length;
@@ -78,23 +78,14 @@ contract DLL
         }
         else
         {
-            string memory index = sorted_head;
-            while(compare(key,index) > 0)
-            {
-                index = objects[index].sorted_next;
-            }
-            //index will end up being the key of the next sorted node
-
-            node memory object3 = node(value, objects[index].sorted_prev, index, tail, "NULL", key);
+            string memory previndex = objects[targetkey].sorted_prev;
+            string memory nextindex = targetkey;
+            
+            node memory object3 = node(value, previndex, nextindex, tail, "NULL", key);
             objects[key] = object3;
-
-            string memory previndex = objects[index].sorted_prev;
-            string memory nextindex = index;
-
+            
             objects[previndex].sorted_next = key;
             objects[nextindex].sorted_prev = key;
-            objects[key] = object3;
-
         }
 
         //by default push_back to end of unsorted list
@@ -330,6 +321,11 @@ contract DLL
     function getEntry(string key) public view returns (string, string, string, string, string, string)
     {
         return (objects[key].key, objects[key].value, objects[key].prev, objects[key].next, objects[key].sorted_prev, objects[key].sorted_next);
+    }
+    
+    function getSortedHead() public view returns (string, string, string, string, string, string)
+    {
+        return (objects[sorted_head].key, objects[sorted_head].value, objects[sorted_head].prev, objects[sorted_head].next, objects[sorted_head].sorted_prev, objects[sorted_head].sorted_next);
     }
 
 }
