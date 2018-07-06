@@ -40,7 +40,7 @@ contract DLL
             return 0;
     }
 
-    function insert(string key, string value) public returns (bool)
+    function insert(string key, string value, string targetkey) public returns (bool)
     {
         if(bytes(objects[key].value).length != 0)
         {
