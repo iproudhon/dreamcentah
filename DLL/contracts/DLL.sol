@@ -1,9 +1,7 @@
 pragma solidity ^0.4.24;
 
-import "./StringUtils.sol";
 
-//There are two types of links-> ordered and unordered. unordered list contains nodes that are put in order as they are put inserted to the list. the ordered list maintains the order of the nodes based on key of each node
-contract DLL 
+contract DLL
 {
     struct node
     {
@@ -23,6 +21,140 @@ contract DLL
 
     mapping(string=>node) private objects;
 
+    function compare(string _a, string _b) public returns (int) {
+        bytes memory a = bytes(_a);
+        bytes memory b = bytes(_b);
+        uint minLength = a.length;
+        if (b.length < minLength) minLength = b.length;
+        //@todo unroll the loop into increments of 32 and do full 32 byte comparisons
+        for (uint i = 0; i < minLength; i ++)
+            if (a[i] < b[i])
+                return -1;
+            else if (a[i] > b[i])
+                return 1;
+        if (a.length < b.length)
+            return -1;
+        else if (a.length > b.length)
+            return 1;
+        else
+            return 0;
+    }
+
+    function insert(string key, string value) public returns (bool)
+    {
+        if(bytes(objects[key].value).length != 0)
+        {
+            //if the key is already in use
+            return false;
+        }
+
+        if(length == 0)
+        {
+            node memory object = node(value, "NULL", "NULL", "NULL", "NULL", key);
+            objects[key] = object;
+            head = key;
+            tail = key;
+            sorted_head = key;
+            sorted_tail = key;
+            length++;
+            return true;
+        }
+
+        if(compare(key,sorted_head) < 0) //if it is smallest string at head
+        {
+            node memory object1 = node(value, "NULL", sorted_head, tail, "NULL", key);
+            objects[key] = object1;
+            objects[sorted_head].sorted_prev = key;
+            sorted_head = key;
+            objects[key] = object1;
+        }
+        else if(compare(key,sorted_tail) > 0) //if it is largest string at tail
+        {
+            node memory object2 = node(value, sorted_tail, "NULL", tail, "NULL", key);
+            objects[key] = object2;
+            objects[sorted_tail].sorted_next = key;
+            sorted_tail = key;
+            objects[key] = object2;
+        }
+        else
+        {
+            string memory index = sorted_head;
+            while(compare(key,index) > 0)
+            {
+                index = objects[index].sorted_next;
+            }
+            //index will end up being the key of the next sorted node
+
+            node memory object3 = node(value, objects[index].sorted_prev, index, tail, "NULL", key);
+            objects[key] = object3;
+
+            string memory previndex = objects[index].sorted_prev;
+            string memory nextindex = index;
+
+            objects[previndex].sorted_next = key;
+            objects[nextindex].sorted_prev = key;
+            objects[key] = object3;
+
+        }
+
+        //by default push_back to end of unsorted list
+        objects[tail].next = key;
+        tail = key;
+
+        length++;
+        return true;
+    }
+/*
+    function push_back(string key, string value) public returns (bool)
+    {
+        if(bytes(objects[key].value).length != 0)
+        {
+            //if the key is already in use
+            return;
+        }
+
+        if(length == 0)
+        {
+            node memory object = node(value, "NULL","NULL", key);
+            objects[key] = object;
+            head = key;
+            tail = head;
+        }
+
+        else
+        {
+            node memory obj = node(value, tail, "NULL", key);
+            objects[key] = obj;
+            objects[tail].next = key;
+            tail = key;
+        }
+
+        length++;
+    }
+
+    function push_front(string key, string value) public returns (bool)
+    {
+       // string id = keccak256(object.key, object.value, now, length);
+        if(length == 0)
+        {
+            node memory object = node(value, "NULL", "NULL", key);
+            objects[key] = object;
+            head = key;
+            tail = head;
+        }
+
+        else
+        {
+            node memory obj = node(value, "NULL", head, key);
+            objects[key] = obj;
+            objects[head].prev = key;
+            head = key;
+        }
+
+        length++;
+    }
+    */
+
     function pop_front() public returns (bool)
     {
         if(length == 0)
@@ -32,11 +164,35 @@ contract DLL
 
         if(length == 1)
         {
+            delete objects[head];
             head = "NULL";
             tail = "NULL";
+            sorted_head = "NULL";
+            sorted_tail = "NULL";
         }
         else
         {
+            if(compare(head,sorted_head) == 0)
+            {
+                sorted_head = objects[sorted_head].sorted_next;
+                objects[sorted_head].sorted_prev = "NULL";
+            }
+
+            else if(compare(head,sorted_tail) == 0)
+            {
+                sorted_tail = objects[sorted_tail].sorted_prev;
+                objects[sorted_tail].sorted_next = "NULL";
+            }
+
+            else
+            {
+                string storage sprevkey = objects[head].sorted_prev;
+                string storage snextkey = objects[head].sorted_next;
+                objects[sprevkey].sorted_next = snextkey;
+                objects[snextkey].sorted_prev = sprevkey;
+            }
+
+            delete objects[head];
             head = objects[head].next;
             objects[head].prev = "NULL";
         }
@@ -53,11 +209,31 @@ contract DLL
 
         if(length == 1)
         {
+            delete objects[head];
             head = "NULL";
             tail = "NULL";
         }
         else
         {
+            if(compare(tail,sorted_head) == 0)
+            {
+                sorted_head = objects[sorted_head].sorted_next;
+                objects[sorted_head].sorted_prev = "NULL";
+            }
+            else if(compare(tail,sorted_tail) == 0)
+            {
+                sorted_tail = objects[sorted_tail].sorted_prev;
+                objects[sorted_tail].sorted_next = "NULL";
+            }
+            else
+            {
+                string storage sprevkey = objects[tail].sorted_prev;
+                string storage snextkey = objects[tail].sorted_next;
+                objects[sprevkey].sorted_next = snextkey;
+                objects[snextkey].sorted_prev = sprevkey;
+            }
+
+            delete objects[tail];
             tail = objects[tail].prev;
             objects[tail].next = "NULL";
         }
@@ -73,6 +249,7 @@ contract DLL
             return false;
         }
 
+        //sorted
         if(length == 1)
         {
             delete objects[targetkey];
@@ -80,12 +257,31 @@ contract DLL
             return true;
         }
 
-        if(StringUtils.equal(targetkey, head))
+        if(compare(targetkey,sorted_head) == 0)
+        {
+            sorted_head = objects[sorted_head].sorted_next;
+            objects[sorted_head].sorted_prev = "NULL";
+        }
+        else if(compare(targetkey,sorted_tail) == 0)
+        {
+            sorted_tail = objects[sorted_tail].sorted_prev;
+            objects[sorted_tail].sorted_next = "NULL";
+        }
+        else
+        {
+            string storage sprevkey = objects[targetkey].sorted_prev;
+            string storage snextkey = objects[targetkey].sorted_next;
+            objects[sprevkey].sorted_next = snextkey;
+            objects[snextkey].sorted_prev = sprevkey;
+        }
+
+        //unsorted
+        if(keccak256(bytes(objects[targetkey].key)) == keccak256(bytes(head)))
         {
             head = objects[targetkey].next;
             objects[head].prev = "NULL";
         }
-        else if(StringUtils.equal(targetkey, tail))
+        else if(keccak256(bytes(objects[targetkey].key)) == keccak256(bytes(tail)))
         {
             tail = objects[targetkey].prev;
             objects[tail].next = "NULL";
@@ -98,27 +294,8 @@ contract DLL
             objects[nextkey].prev = prevkey;
         }
 
-        if (StringUtils.equal(targetkey, sorted_head))
-        {
-            sorted_head = objects[targetkey].sorted_next;
-            objects[sorted_head].sorted_prev = "NULL";
-        }
-        else if(StringUtils.equal(targetkey, sorted_tail))
-        {
-            sorted_tail = objects[targetkey].sorted_prev;
-            objects[sorted_tail].sorted_next = "NULL";
-        }
-        else
-        {
-            string memory sorted_prevkey = objects[targetkey].sorted_prev;
-            string memory sorted_nextkey = objects[targetkey].sorted_next;
-            objects[sorted_prevkey].sorted_next = sorted_nextkey;
-            objects[sorted_nextkey].sorted_prev = sorted_prevkey;
-        }
-
         delete objects[targetkey];
         length--;
-        return true;
     }
 
     function front() public view returns (string)
@@ -150,45 +327,10 @@ contract DLL
         }
     }
 
-    function getEntry(string key) public view returns (string, string, string, string)
+    function getEntry(string key) public view returns (string, string, string, string, string, string)
     {
-        return (objects[key].key, objects[key].value, objects[key].prev, objects[key].next);
+        return (objects[key].key, objects[key].value, objects[key].prev, objects[key].next, objects[key].sorted_prev, objects[key].sorted_next);
     }
 
-    function getLength() public view returns (int)
-    {
-        return length;
-    }
-
-    function insert(string key, string value) public returns (bool)
-    {
-        if(bytes(objects[key].value).length != 0)
-        {
-            //if the key is already in use
-            return false;
-        }
-
-        node memory object;
-        if(length == 0)
-        {
-            object = node(value, key, key, key, key, key);
-            objects[key] = object;
-            return true;
-        }
-
-        //for ordered link
-        string memory temp = sorted_head;
-        while (StringUtils.compare(temp, key) == -1)
-        { //linear search until key is placed at the right place
-            temp = objects[temp].sorted_next;
-        }
-        //insert before temp in the ordered list and push_back for unordered list
-        object = node(value, objects[temp].sorted_prev, temp, tail, "NULL", key);
-        objects[object.sorted_prev].sorted_next = key;
-        objects[temp].sorted_prev = key;
-        objects[tail].next = key;
-        objects[key] = object;
-        tail = key;
-        length++;
-    }
 }
+
