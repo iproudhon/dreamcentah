@@ -20,7 +20,7 @@ function %s_new() {\
   {\
     from: web3.eth.accounts[0],\
     data: %s_data,\
-    gas: \"0x20000000\"\
+    gas: \"0x2000000\"\
   }, function (e, contract) {\
     console.log(e, contract);\
     if (typeof contract.address !== \"undefined\") {\
