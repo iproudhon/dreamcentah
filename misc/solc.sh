@@ -1,17 +1,27 @@
 #!/bin/bash
 
+[ "${SOL_GAS}" = "" ] && SOL_GAS="0x10000000"
+
 
 function usage ()
 {
-    echo "$(basename $0) [-l <name>:<addr>]+ <sol-file> <js-file>
+    echo "$(basename $0) [-g gas] [-l <name>:<addr>]+ <sol-file> <js-file>
 
-SOL_LIBS environment variable can be used instead of -l option."
+-g <gas>:         gas amount to spend.
+-l <name>:<addr>: library name and address pair separated by ':'.
+    Multiple -l options can be used to specify multiple libraries.
+
+Environment Variables:
+  SOL_GAS for gas amount, equivalent to -g option.
+  SOL_LIBS for libaries, equivalent to -l option. Pairs should be separated by
+    space, e.g. \"name1:0x123..456 name2:abc..def\".
+"
 }
 
 # int compile(string solFile, string jsFile)
 function compile ()
 {
-    docker run -v $(pwd):/tmp --workdir /tmp --rm ethereum/solc:stable --optimize --abi --bin $1 | awk -v libs="$SOL_LIBS" '
+    docker run -v $(pwd):/tmp --workdir /tmp --rm ethereum/solc:stable --optimize --abi --bin $1 | awk -v gas="$SOL_GAS" -v libs="$SOL_LIBS" '
 function flush() {
   if (length(code_name) > 0) {
     printf "\
@@ -20,7 +30,7 @@ function %s_new() {\
   {\
     from: web3.eth.accounts[0],\
     data: %s_data,\
-    gas: \"0x20000000\"\
+    gas: \"%s\"\
   }, function (e, contract) {\
     console.log(e, contract);\
     if (typeof contract.address !== \"undefined\") {\
@@ -33,7 +43,7 @@ function %s_load(addr) {\
    %s = %s_contract.at(addr);\
 }\
 \
-", code_name, code_name, code_name, code_name, code_name, code_name, code_name;
+", code_name, code_name, code_name, code_name, gas, code_name, code_name, code_name;
   }
 }
 
@@ -76,7 +86,7 @@ END {
 ' > $2;
 }
 
-args=`getopt l: $*`
+args=`getopt g:l: $*`
 if [ $? != 0 ]; then
     usage;
     exit 1;
@@ -86,6 +96,10 @@ set -- $args
 #SOL_LIBS
 for i; do
     case "$i" in
+    -g)
+	SOL_GAS=$2
+	shift;
+	shift;;
     -l)
 	[ "$SOL_LIBS" = "" ] || SOL_LIBS="$SOL_LIBS "
 	SOL_LIBS="${SOL_LIBS}$2";
