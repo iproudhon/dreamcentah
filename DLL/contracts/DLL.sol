@@ -11,6 +11,7 @@ contract DLL
         string prev;
         string next;
         string key;
+        int exists;
     }
 
     int public length = 0;
@@ -42,7 +43,7 @@ contract DLL
 
     function insert(string key, string value, string targetkey) public returns (bool)
     {
-        if(bytes(objects[key].value).length != 0)
+        if(objects[key].exists == 1)
         {
             //if the key is already in use
             return false;
@@ -50,7 +51,7 @@ contract DLL
 
         if(length == 0)
         {
-            node memory object = node(value, "NULL", "NULL", "NULL", "NULL", key);
+            node memory object = node(value, "NULL", "NULL", "NULL", "NULL", key, 1);
             objects[key] = object;
             head = key;
             tail = key;
@@ -62,7 +63,7 @@ contract DLL
         
         if(compare(key,sorted_head) < 0) //if it is smallest string at head
         {
-            node memory object1 = node(value, "NULL", sorted_head, tail, "NULL", key);
+            node memory object1 = node(value, "NULL", sorted_head, tail, "NULL", key, 1);
             objects[key] = object1;
             objects[sorted_head].sorted_prev = key;
             sorted_head = key;
@@ -70,7 +71,7 @@ contract DLL
         
         else if(compare(key,sorted_tail) > 0) //if it is largest string at tail
         {
-            node memory object2 = node(value, sorted_tail, "NULL", tail, "NULL", key);
+            node memory object2 = node(value, sorted_tail, "NULL", tail, "NULL", key, 1);
             objects[key] = object2;
             objects[sorted_tail].sorted_next = key;
             sorted_tail = key;
@@ -78,17 +79,10 @@ contract DLL
 
         else
         {
-            // string memory index = sorted_head;
-            // while(compare(key,index) > 0)
-            // {
-            //     index = objects[index].sorted_next;
-            // }
-            // //index will end up being the key of the next sorted node
-
             string memory previndex = objects[targetkey].sorted_prev;
             string memory nextindex = targetkey;
             
-            node memory object3 = node(value, previndex, nextindex, tail, "NULL", key);
+            node memory object3 = node(value, previndex, nextindex, tail, "NULL", key, 1);
             objects[key] = object3;
             
             objects[previndex].sorted_next = key;
@@ -206,7 +200,7 @@ contract DLL
 
     function remove(string targetkey) public returns (bool)
     {
-        if(bytes(objects[targetkey].value).length == 0 || length == 0)
+        if(objects[targetkey].exists != 1 || length == 0)
         {
             //if the key value is nonexistent or if list is empty
             return false;
@@ -241,13 +235,13 @@ contract DLL
         }
 
         //unsorted
-        if(keccak256(bytes(objects[targetkey].key)) == keccak256(bytes(head)))
+        if(compare(objects[targetkey].key, head) == 0)
         {
             head = objects[targetkey].next;
             objects[head].prev = "NULL";
         }
 
-        else if(keccak256(bytes(objects[targetkey].key)) == keccak256(bytes(tail)))
+        else if(compare(objects[targetkey].key, tail) == 0)
         {
             tail = objects[targetkey].prev;
             objects[tail].next = "NULL";
@@ -293,14 +287,33 @@ contract DLL
             pop_back();
         }
     }
+    
+    function update(string key, string uvalue) public returns (bool)
+    {
+        if(objects[key].exists == 1)
+        {
+            objects[key].value = uvalue;
+            return true;
+        }
+        return false;
+    }
 
     function getEntry(string key) public view returns (string, string, string, string, string, string)
     {
+        if(objects[key].exists != 1)
+        {
+            return;    
+        }
+        
         return (objects[key].key, objects[key].value, objects[key].prev, objects[key].next, objects[key].sorted_prev, objects[key].sorted_next);
     }
     
     function getSortedHead() public view returns (string, string, string, string, string, string)
     {
+        if(compare(sorted_head,"NULL") == 0)
+        {
+            return;    
+        }
         return (objects[sorted_head].key, objects[sorted_head].value, objects[sorted_head].prev, objects[sorted_head].next, objects[sorted_head].sorted_prev, objects[sorted_head].sorted_next);
     }
 }
