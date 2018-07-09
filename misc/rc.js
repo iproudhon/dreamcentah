@@ -47,3 +47,7 @@ function insert(key, value) { //find the way to do mining asynchronously
   DLL.insert(key, value, targetkey, {from:eth.accounts[0], gas:1000000});
   return targetkey;
 }
+
+function remove(targetkey) { 
+  return DLL.remove(targetkey, {from:eth.accounts[0], gas:1000000});
+}
