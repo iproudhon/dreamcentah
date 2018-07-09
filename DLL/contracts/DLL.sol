@@ -20,7 +20,7 @@ contract DLL
     string public tail;
 
     mapping(string=>node) private objects;
-
+    
     function compare(string _a, string _b) public pure returns (int) {
         bytes memory a = bytes(_a);
         bytes memory b = bytes(_b);
@@ -59,25 +59,32 @@ contract DLL
             length++;
             return true;
         }
-
+        
         if(compare(key,sorted_head) < 0) //if it is smallest string at head
         {
             node memory object1 = node(value, "NULL", sorted_head, tail, "NULL", key);
             objects[key] = object1;
             objects[sorted_head].sorted_prev = key;
             sorted_head = key;
-            objects[key] = object1;
         }
+        
         else if(compare(key,sorted_tail) > 0) //if it is largest string at tail
         {
             node memory object2 = node(value, sorted_tail, "NULL", tail, "NULL", key);
             objects[key] = object2;
             objects[sorted_tail].sorted_next = key;
             sorted_tail = key;
-            objects[key] = object2;
         }
+
         else
         {
+            // string memory index = sorted_head;
+            // while(compare(key,index) > 0)
+            // {
+            //     index = objects[index].sorted_next;
+            // }
+            // //index will end up being the key of the next sorted node
+
             string memory previndex = objects[targetkey].sorted_prev;
             string memory nextindex = targetkey;
             
@@ -86,8 +93,9 @@ contract DLL
             
             objects[previndex].sorted_next = key;
             objects[nextindex].sorted_prev = key;
-        }
 
+        }
+        
         //by default push_back to end of unsorted list
         objects[tail].next = key;
         tail = key;
@@ -95,56 +103,6 @@ contract DLL
         length++;
         return true;
     }
-/*
-    function push_back(string key, string value) public returns (bool)
-    {
-        if(bytes(objects[key].value).length != 0)
-        {
-            //if the key is already in use
-            return;
-        }
-
-        if(length == 0)
-        {
-            node memory object = node(value, "NULL","NULL", key);
-            objects[key] = object;
-            head = key;
-            tail = head;
-        }
-
-        else
-        {
-            node memory obj = node(value, tail, "NULL", key);
-            objects[key] = obj;
-            objects[tail].next = key;
-            tail = key;
-        }
-
-        length++;
-    }
-
-    function push_front(string key, string value) public returns (bool)
-    {
-       // string id = keccak256(object.key, object.value, now, length);
-        if(length == 0)
-        {
-            node memory object = node(value, "NULL", "NULL", key);
-            objects[key] = object;
-            head = key;
-            tail = head;
-        }
-
-        else
-        {
-            node memory obj = node(value, "NULL", head, key);
-            objects[key] = obj;
-            objects[head].prev = key;
-            head = key;
-        }
-
-        length++;
-    }
-    */
 
     function pop_front() public returns (bool)
     {
@@ -160,7 +118,10 @@ contract DLL
             tail = "NULL";
             sorted_head = "NULL";
             sorted_tail = "NULL";
+            length--;
+            return true;
         }
+
         else
         {
             if(compare(head,sorted_head) == 0)
@@ -168,13 +129,13 @@ contract DLL
                 sorted_head = objects[sorted_head].sorted_next;
                 objects[sorted_head].sorted_prev = "NULL";
             }
-
+            
             else if(compare(head,sorted_tail) == 0)
             {
                 sorted_tail = objects[sorted_tail].sorted_prev;
                 objects[sorted_tail].sorted_next = "NULL";
             }
-
+            
             else
             {
                 string storage sprevkey = objects[head].sorted_prev;
@@ -182,16 +143,17 @@ contract DLL
                 objects[sprevkey].sorted_next = snextkey;
                 objects[snextkey].sorted_prev = sprevkey;
             }
-
-            string storage tmp = objects[head].next;
-            objects[tmp].prev = "NULL";
-            delete objects[head];
-            head = tmp;
         }
 
-        length--;
-    }
+        string storage tmp = objects[head].next;
+        objects[tmp].prev = "NULL";
+        head = tmp;
+        delete objects[objects[head].prev];
 
+        length--;
+        return true;
+    }
+    
     function pop_back() public returns (bool)
     {
         if(length == 0)
@@ -204,7 +166,12 @@ contract DLL
             delete objects[head];
             head = "NULL";
             tail = "NULL";
+            sorted_head = "NULL";
+            sorted_tail = "NULL";
+            length--;
+            return true;
         }
+
         else
         {
             if(compare(tail,sorted_head) == 0)
@@ -212,11 +179,13 @@ contract DLL
                 sorted_head = objects[sorted_head].sorted_next;
                 objects[sorted_head].sorted_prev = "NULL";
             }
+            
             else if(compare(tail,sorted_tail) == 0)
             {
                 sorted_tail = objects[sorted_tail].sorted_prev;
                 objects[sorted_tail].sorted_next = "NULL";
             }
+            
             else
             {
                 string storage sprevkey = objects[tail].sorted_prev;
@@ -224,14 +193,15 @@ contract DLL
                 objects[sprevkey].sorted_next = snextkey;
                 objects[snextkey].sorted_prev = sprevkey;
             }
-
-            string storage temp = objects[tail].prev;
-            objects[temp].next = "NULL";
-            delete objects[tail];
-            tail = temp;
         }
-
+        
+        string storage temp = objects[tail].prev;
+        objects[temp].next = "NULL";
+        tail = temp;
+        delete objects[objects[tail].next];
         length--;
+        
+        return true;
     }
 
     function remove(string targetkey) public returns (bool)
@@ -242,24 +212,26 @@ contract DLL
             return false;
         }
 
-        //sorted
+        //sorted 
         if(length == 1)
         {
             delete objects[targetkey];
             length--;
             return true;
         }
-
+        
         if(compare(targetkey,sorted_head) == 0)
         {
             sorted_head = objects[sorted_head].sorted_next;
             objects[sorted_head].sorted_prev = "NULL";
         }
+        
         else if(compare(targetkey,sorted_tail) == 0)
         {
             sorted_tail = objects[sorted_tail].sorted_prev;
             objects[sorted_tail].sorted_next = "NULL";
         }
+        
         else
         {
             string storage sprevkey = objects[targetkey].sorted_prev;
@@ -274,11 +246,13 @@ contract DLL
             head = objects[targetkey].next;
             objects[head].prev = "NULL";
         }
+
         else if(keccak256(bytes(objects[targetkey].key)) == keccak256(bytes(tail)))
         {
             tail = objects[targetkey].prev;
             objects[tail].next = "NULL";
         }
+
         else //if the entry is at neither the head or the tail of the list, at least 3 entries
         {
             string storage prevkey = objects[targetkey].prev;
@@ -290,7 +264,7 @@ contract DLL
         delete objects[targetkey];
         length--;
     }
-
+    
     function front() public view returns (string)
     {
         if(length > 0)
@@ -329,6 +303,4 @@ contract DLL
     {
         return (objects[sorted_head].key, objects[sorted_head].value, objects[sorted_head].prev, objects[sorted_head].next, objects[sorted_head].sorted_prev, objects[sorted_head].sorted_next);
     }
-
 }
-
