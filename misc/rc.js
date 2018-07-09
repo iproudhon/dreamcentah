@@ -48,4 +48,10 @@ function insert(key, value) { //find the way to do mining asynchronously
   return targetkey;
 }
 
+<<<<<<< HEAD
 
+=======
+function remove(targetkey) { 
+  return DLL.remove(targetkey, {from:eth.accounts[0], gas:1000000});
+}
+>>>>>>> refs/remotes/origin/master
