@@ -35,6 +35,7 @@ function unlock()
 
 function testPopulate() {
   DLL.insert("1", "1", "1", {from:eth.accounts[0], gas:1000000});
+  DLL.insert("2", "2", "2", {from:eth.accounts[0], gas:1000000});
   DLL.insert("3", "3", "3", {from:eth.accounts[0], gas:1000000});
 }
 
@@ -47,9 +48,19 @@ function getTargetKey(key) { //linear search done outside
 }
 
 function insert(key, value) { //find the way to do mining asynchronously
+  if(DLL.head() == "NULL") {
+    DLL.insert(key, value, "0", {from:eth.accounts[0], gas:1000000});
+    return 0;
+  }
+  
+  if(key > DLL.sorted_tail() || key < DLL.sorted_head()) {
+    DLL.insert(key, value, "0", {from:eth.accounts[0], gas:1000000});
+    return 1;
+  }
+  
   targetkey = getTargetKey(key);
   DLL.insert(key, value, targetkey, {from:eth.accounts[0], gas:1000000});
-  return targetkey;
+  return 2;
 }
 
 function remove(targetkey) { 
