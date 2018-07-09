@@ -6,8 +6,8 @@ contract DLL
     struct node
     {
         string value;
-        string sorted_prev;
-        string sorted_next;
+    	string sorted_prev;
+	    string sorted_next;
         string prev;
         string next;
         string key;
@@ -146,9 +146,9 @@ contract DLL
         }
 
         string storage tmp = objects[head].next;
-        objects[tmp].prev = "NULL";
         head = tmp;
-        delete objects[objects[head].prev];
+        delete objects[objects[tmp].prev];
+        objects[tmp].prev = "NULL";
 
         length--;
         return true;
@@ -196,11 +196,11 @@ contract DLL
         }
         
         string storage temp = objects[tail].prev;
-        objects[temp].next = "NULL";
         tail = temp;
-        delete objects[objects[tail].next];
-        length--;
+        delete objects[objects[temp].next];
+        objects[temp].next = "NULL";
         
+        length--;
         return true;
     }
 
@@ -304,3 +304,6 @@ contract DLL
         return (objects[sorted_head].key, objects[sorted_head].value, objects[sorted_head].prev, objects[sorted_head].next, objects[sorted_head].sorted_prev, objects[sorted_head].sorted_next);
     }
 }
+
+
+
