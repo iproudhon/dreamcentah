@@ -25,7 +25,7 @@ function iterate()
 function unlock() 
 {
   for(i = 0; i < eth.accounts.length; i++) {
-    personal.unlockAccount(eth.accounts[i], "1", 3600);
+    personal.unlockAccount(eth.accounts[i], "pass", 36000);
   } 
 }
 
@@ -47,3 +47,5 @@ function insert(key, value) { //find the way to do mining asynchronously
   DLL.insert(key, value, targetkey, {from:eth.accounts[0], gas:1000000});
   return targetkey;
 }
+
+
