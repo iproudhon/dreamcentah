@@ -183,9 +183,10 @@ contract DLL
                 objects[snextkey].sorted_prev = sprevkey;
             }
 
+            string storage tmp = objects[head].next;
+            objects[tmp].prev = "NULL";
             delete objects[head];
-            head = objects[head].next;
-            objects[head].prev = "NULL";
+            head = tmp;
         }
 
         length--;
@@ -224,9 +225,10 @@ contract DLL
                 objects[snextkey].sorted_prev = sprevkey;
             }
 
+            string storage temp = objects[tail].prev;
+            objects[temp].next = "NULL";
             delete objects[tail];
-            tail = objects[tail].prev;
-            objects[tail].next = "NULL";
+            tail = temp;
         }
 
         length--;

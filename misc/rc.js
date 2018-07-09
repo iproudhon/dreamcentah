@@ -29,7 +29,7 @@ function iterate()
 function unlock() 
 {
   for(i = 0; i < eth.accounts.length; i++) {
-    personal.unlockAccount(eth.accounts[i], "1", 3600);
+    personal.unlockAccount(eth.accounts[i], "pass", 36000);
   } 
 }
 
@@ -54,4 +54,16 @@ function insert(key, value) { //find the way to do mining asynchronously
 
 function remove(targetkey) { 
   return DLL.remove(targetkey, {from:eth.accounts[0], gas:1000000});
+}
+
+function clear() {
+  return DLL.clear({from:eth.accounts[0], gas:1000000});
+}
+
+function pop_back() {
+  return DLL.pop_back({from:eth.accounts[0], gas:1000000});
+}
+
+function pop_front() {
+  return DLL.pop_front({from:eth.accounts[0], gas:1000000});
 }
