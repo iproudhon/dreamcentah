@@ -21,36 +21,45 @@ w3.eth.defaultAccount = w3.eth.accounts[0]
 write_function_count = 0
 latest_tx_hash = None
 
-def iterate():
+def iterate(start, end):
     key = reader.head()
     e = reader.getEntry(key)
-    while len(e[0]) != 0:
-        print(e[0], e[1], e[2], e[3], e[4], e[5])
+    count = 0
+    while count < end and len(e[0]) != 0:
+        if count >= start:
+            print(e[0], e[1], e[2], e[3], e[4], e[5])
         e = reader.getEntry(e[3])
+        count += 1
 
-def iterateReverse():
+def iterateReverse(start, end):
     key = reader.tail()
     e = reader.getEntry(key)
-    while len(e[0]) != 0:
-        print(e[0], e[1], e[2], e[3], e[4], e[5])
+    count = 0
+    while count < end and len(e[0]) != 0:
+        if count >= start:
+            print(e[0], e[1], e[2], e[3], e[4], e[5])
         e = reader.getEntry(e[2])
 
-def sortedIterate():
+def sortedIterate(start, end):
     key = reader.sorted_head()
     e = reader.getEntry(key)
+    count = 0
     while len(e[0]) != 0:
-        print(e[0], e[1], e[2], e[3], e[4], e[5])
+        if count >= start:
+            print(e[0], e[1], e[2], e[3], e[4], e[5])
         e = reader.getEntry(e[5])
 
-def sortedIterateReverse():
+def sortedIterateReverse(start, end):
     key = reader.sorted_tail()
     e = reader.getEntry(key)
+    count = 0
     while len(e[0]) != 0:
-        print(e[0], e[1], e[2], e[3], e[4], e[5])
+        if count >= start:
+            print(e[0], e[1], e[2], e[3], e[4], e[5])
         e = reader.getEntry(e[4])
 
-def testPopulate():
-    for i in range(10):
+def testPopulate(length):
+    for i in range(int(length)):
         latest_tx_hash = contract_instance.functions.insert(str(i), str(i), str(i)).transact()
     return True 
 
@@ -58,17 +67,17 @@ def getTargetKey(key):
     e = reader.getSortedHead()
     while key >= e[0] and e[0] != reader.sorted_tail():
         e = reader.getEntry(e[5])
-    return e
+    return e[0]
 
 def insert(key, value): 
     if reader.head() == 'NULL': #question: what should the targetkey be? 
-        tx_hash = contract_instance.functions.insert(key, value, "0").transact()
+        tx_hash = contract_instance.functions.insert(key, value, '').transact()
     elif key > reader.sorted_tail() or key < reader.sorted_head():
-        tx_hash = contract_instance.functions.insert(key, value, "0").transact()
+        tx_hash = contract_instance.functions.insert(key, value, '').transact()
     else: 
         targetkey = getTargetKey(key)
         tx_hash = contract_instance.functions.insert(key, value, targetkey).transact()
-    print(str(tx_hash))
+    print(tx_hash)
 
 def remove(targetkey):
     tx_hash = contract_instance.functions.remove(targetkey).transact()
@@ -85,17 +94,17 @@ def main():
     elif function_call == 'remove':
         remove(parameters[0])
     elif function_call == 'iterate':
-        iterate()
+        iterate(int(parameters[0]), int(parameters[1]))
     elif function_call == 'testPopulate':
-        testPopulate()
+        testPopulate(parameters[0])
     elif function_call == 'iterateReverse':
-        iterateReverse()
+        iterateReverse(int(parameters[0]), int(parameters[1]))
     elif function_call == 'sortedIterate':
-        sortedIterate()
+        sortedIterate(int(parameters[0]), int(parameters[1]))
     elif function_call == 'sortedIterateReverse':
-        sortedIterateReverse()
+        sortedIterateReverse(int(parameters[0]), int(parameters[1]))
     elif function_call == 'getTargetKey':
-        getTargetKey()
+        getTargetKey(parameters[0])
     else:
         print('Error: ' + function_call + ' function not found')
         print('Usage: DLL.py <function name> <parameter1, parameter2...>') 
