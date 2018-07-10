@@ -96,14 +96,14 @@ function getTargetKey(key) { //linear search done outside returns index before, 
   return e[4];
 }
 
-function update(key, value) { 
-  return DLL.update(key, value, {from:eth.accounts[0], gas:1000000});
-}
-
 function insert(key, value) { //find the way to do mining asynchronously
+  if(key == ""){
+    return 0; 
+  }
+  
   if(DLL.head() == "") {
     DLL.insert(key, value, "0", {from:eth.accounts[0], gas:1000000});
-    return 0;
+    return 1;
   }
   
   targetkey = getTargetKey(key);
