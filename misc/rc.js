@@ -17,6 +17,11 @@ function iterate()
 {
   var key = DLL.head();	
   for (e = DLL.getEntry(key); e[0].length != 0; e = DLL.getEntry(e[3])) {
+    for(i = 0; i<5; i++) {
+      if(e[i] == "") {
+         e[i] = " ";
+      }
+    }
     console.log(e[0], e[1], e[2], e[3], e[4], e[5]);
   }
 }
@@ -25,6 +30,11 @@ function iterate_reverse()
 {
   var key = DLL.tail();	
   for (e = DLL.getEntry(key); e[0].length != 0; e = DLL.getEntry(e[2])) {
+    for(i = 0; i<5; i++) {
+      if(e[i] == "") {
+         e[i] = " ";
+      }
+    }
     console.log(e[0], e[1], e[2], e[3], e[4], e[5]);
   }
 }
@@ -33,6 +43,11 @@ function sorted_iterate()
 {
   var key = DLL.sorted_head();	
   for (e = DLL.getEntry(key); e[0].length != 0; e = DLL.getEntry(e[5])) {
+    for(i = 0; i<5; i++) {
+      if(e[i] == "") {
+         e[i] = " ";
+      }
+    }
     console.log(e[0], e[1], e[2], e[3], e[4], e[5]);
   }
 }
@@ -41,6 +56,11 @@ function sorted_iterate_reverse()
 {
   var key = DLL.sorted_tail();
   for (e = DLL.getEntry(key); e[0].length != 0; e = DLL.getEntry(e[4])) {
+    for(i = 0; i<5; i++) {
+      if(e[i] == "") {
+         e[i] = " ";
+      }
+    }
     console.log(e[0], e[1], e[2], e[3], e[4], e[5]); 
   }
 }
