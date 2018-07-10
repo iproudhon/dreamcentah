@@ -159,22 +159,6 @@ contract DLL
         delete objects[targetkey];
         length--;
     }
-    
-    function front() public view returns (string)
-    {
-        if(length > 0)
-        {
-            return objects[head].key;
-        }
-    }
-
-    function back() public view returns (string)
-    {
-        if(length > 0)
-        {
-            return objects[tail].key;
-        }
-    }
 
     function size() public view returns (int)
     {
