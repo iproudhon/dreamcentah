@@ -1,6 +1,5 @@
 pragma solidity ^0.4.24;
 
-
 contract DLL
 {
     struct node
@@ -11,7 +10,6 @@ contract DLL
         string prev;
         string next;
         string key;
-        int exists;
     }
 
     int public length = 0;
@@ -21,38 +19,35 @@ contract DLL
     string public tail;
 
     mapping(string=>node) private objects;
-    string constant NULL = "";
-    
-    function compare(string _a, string _b) public pure returns (int) {
-        bytes memory a = bytes(_a);
-        bytes memory b = bytes(_b);
-        uint minLength = a.length;
-        if (b.length < minLength) minLength = b.length;
-        //@todo unroll the loop into increments of 32 and do full 32 byte comparisons
-        for (uint i = 0; i < minLength; i ++)
-            if (a[i] < b[i])
-                return -1;
-            else if (a[i] > b[i])
-                return 1;
-        if (a.length < b.length)
-            return -1;
-        else if (a.length > b.length)
-            return 1;
-        else
-            return 0;
-    }
+    string constant nil = "";
 
-    function insert(string key, string value, string targetkey) public returns (bool)
+    function insert(string key, string value, string targetkey, bool update) public returns (bool)
     {
-        if(objects[key].exists == 1 || compare(key,"") == 0)
+        if(bytes(key).length == 0) // if empty key
         {
-            //if the key is already in use or empty key
+            return false;
+        }
+        
+        if(bytes(objects[key].key).length != 0 && update == true)
+        {
+            //update
+            objects[key].value = value;
+            return true;
+        }
+        
+        else if(update == false && bytes(objects[key].key).length != 0)
+        {
             return false;
         }
 
         if(length == 0)
         {
-            node memory object = node(value, NULL, NULL, NULL, NULL, key, 1);
+            node memory object;
+            
+            object.value = value;
+            object.key = key;
+            //rest are nil ""
+            
             objects[key] = object;
             head = key;
             tail = key;
@@ -62,34 +57,39 @@ contract DLL
             return true;
         }
         
-        if(compare(key,sorted_head) < 0) //if it is smallest string at head
-        {
-            node memory object1 = node(value, NULL, sorted_head, tail, NULL, key, 1);
+        string memory previndex;
+        string memory nextindex;
+
+        if(bytes(targetkey).length == 0) { // if it is nil string, or if it belongs at the front
+            previndex = nil;
+            nextindex = objects[sorted_head].key;
+            node memory object1 = node(value, previndex, nextindex, tail, nil, key);
             objects[key] = object1;
-            objects[sorted_head].sorted_prev = key;
+            
+            objects[nextindex].sorted_prev = key;
             sorted_head = key;
         }
         
-        else if(compare(key,sorted_tail) > 0) //if it is largest string at tail
-        {
-            node memory object2 = node(value, sorted_tail, NULL, tail, NULL, key, 1);
+        else if(keccak256(bytes(targetkey)) == keccak256(bytes(sorted_tail))) { //if belongs at end
+            previndex = targetkey;
+            nextindex = nil;
+            node memory object2 = node(value, previndex, nextindex, tail, nil, key);
             objects[key] = object2;
-            objects[sorted_tail].sorted_next = key;
-            sorted_tail = key;
-        }
-
-        else
-        {
-            string memory previndex = objects[targetkey].sorted_prev;
-            string memory nextindex = targetkey;
-            
-            node memory object3 = node(value, previndex, nextindex, tail, NULL, key, 1);
-            objects[key] = object3;
             
             objects[previndex].sorted_next = key;
-            objects[nextindex].sorted_prev = key;
-
+            sorted_tail = key;
         }
+        
+        else {
+            previndex = targetkey;
+            nextindex = objects[targetkey].sorted_next;
+            node memory object3 = node(value, previndex, nextindex, tail, nil, key);
+            objects[key] = object3;
+            
+            objects[targetkey].sorted_next = key;
+            objects[nextindex].sorted_prev = key;
+        }
+
         
         //by default push_back to end of unsorted list
         objects[tail].next = key;
@@ -99,109 +99,9 @@ contract DLL
         return true;
     }
 
-    function pop_front() public returns (bool)
-    {
-        if(length == 0)
-        {
-            return false;
-        }
-
-        if(length == 1)
-        {
-            delete objects[head];
-            head = NULL;
-            tail = NULL;
-            sorted_head = NULL;
-            sorted_tail = NULL;
-            length--;
-            return true;
-        }
-
-        else
-        {
-            if(compare(head,sorted_head) == 0)
-            {
-                sorted_head = objects[sorted_head].sorted_next;
-                objects[sorted_head].sorted_prev = NULL;
-            }
-            
-            else if(compare(head,sorted_tail) == 0)
-            {
-                sorted_tail = objects[sorted_tail].sorted_prev;
-                objects[sorted_tail].sorted_next = NULL;
-            }
-            
-            else
-            {
-                string storage sprevkey = objects[head].sorted_prev;
-                string storage snextkey = objects[head].sorted_next;
-                objects[sprevkey].sorted_next = snextkey;
-                objects[snextkey].sorted_prev = sprevkey;
-            }
-        }
-
-        string storage tmp = objects[head].next;
-        head = tmp;
-        delete objects[objects[tmp].prev];
-        objects[head].prev = NULL;
-
-        length--;
-        return true;
-    }
-    
-    function pop_back() public returns (bool)
-    {
-        if(length == 0)
-        {
-            return false;
-        }
-
-        if(length == 1)
-        {
-            delete objects[head];
-            head = NULL;
-            tail = NULL;
-            sorted_head = NULL;
-            sorted_tail = NULL;
-            length--;
-            return true;
-        }
-
-        else
-        {
-            if(compare(tail,sorted_head) == 0)
-            {
-                sorted_head = objects[sorted_head].sorted_next;
-                objects[sorted_head].sorted_prev = NULL;
-            }
-            
-            else if(compare(tail,sorted_tail) == 0)
-            {
-                sorted_tail = objects[sorted_tail].sorted_prev;
-                objects[sorted_tail].sorted_next = NULL;
-            }
-            
-            else
-            {
-                string storage sprevkey = objects[tail].sorted_prev;
-                string storage snextkey = objects[tail].sorted_next;
-                objects[sprevkey].sorted_next = snextkey;
-                objects[snextkey].sorted_prev = sprevkey;
-            }
-        }
-        
-        string storage temp = objects[tail].prev;
-        tail = temp;
-        delete objects[objects[temp].next];
-        objects[tail].next = NULL;
-        
-        length--;
-        return true;
-    }
-
     function remove(string targetkey) public returns (bool)
     {
-        if(objects[targetkey].exists != 1 || length == 0)
+        if(bytes(objects[targetkey].key).length == 0 || length == 0)
         {
             //if the key value is nonexistent or if list is empty
             return false;
@@ -215,16 +115,16 @@ contract DLL
             return true;
         }
         
-        if(compare(targetkey,sorted_head) == 0)
+        if(keccak256(bytes(targetkey)) == keccak256(bytes(sorted_head)))
         {
             sorted_head = objects[sorted_head].sorted_next;
-            objects[sorted_head].sorted_prev = NULL;
+            objects[sorted_head].sorted_prev = nil;
         }
         
-        else if(compare(targetkey,sorted_tail) == 0)
+        else if(keccak256(bytes(targetkey)) == keccak256(bytes(sorted_tail)))
         {
             sorted_tail = objects[sorted_tail].sorted_prev;
-            objects[sorted_tail].sorted_next = NULL;
+            objects[sorted_tail].sorted_next = nil;
         }
         
         else
@@ -236,16 +136,16 @@ contract DLL
         }
 
         //unsorted
-        if(compare(objects[targetkey].key, head) == 0)
+        if(keccak256(bytes(objects[targetkey].key)) == keccak256(bytes(head)))
         {
             head = objects[targetkey].next;
-            objects[head].prev = NULL;
+            objects[head].prev = nil;
         }
 
-        else if(compare(objects[targetkey].key, tail) == 0)
+        else if(keccak256(bytes(objects[targetkey].key)) == keccak256(bytes(tail)))
         {
             tail = objects[targetkey].prev;
-            objects[tail].next = NULL;
+            objects[tail].next = nil;
         }
 
         else //if the entry is at neither the head or the tail of the list, at least 3 entries
@@ -259,49 +159,15 @@ contract DLL
         delete objects[targetkey];
         length--;
     }
-    
-    function front() public view returns (string)
-    {
-        if(length > 0)
-        {
-            return objects[head].key;
-        }
-    }
-
-    function back() public view returns (string)
-    {
-        if(length > 0)
-        {
-            return objects[tail].key;
-        }
-    }
 
     function size() public view returns (int)
     {
         return length;
     }
 
-    function clear() public returns (bool)
-    {
-        while(length > 0)
-        {
-            pop_back();
-        }
-    }
-    
-    function update(string key, string uvalue) public returns (bool)
-    {
-        if(objects[key].exists == 1)
-        {
-            objects[key].value = uvalue;
-            return true;
-        }
-        return false;
-    }
-
     function getEntry(string key) public view returns (string, string, string, string, string, string)
     {
-        if(objects[key].exists != 1)
+        if(bytes(objects[key].key).length == 0)
         {
             return;    
         }
@@ -311,10 +177,22 @@ contract DLL
     
     function getSortedHead() public view returns (string, string, string, string, string, string)
     {
-        if(compare(sorted_head,NULL) == 0)
+        if(bytes(sorted_head).length == 0)
+        {
+            return;    
+        }
+        return (objects[sorted_head].key, objects[sorted_head].value, objects[sorted_head].prev, objects[sorted_head].next, objects[sorted_head].sorted_prev, objects[sorted_head].sorted_next);
+    }
+    
+    function getSortedTail() public view returns (string, string, string, string, string, string)
+    {
+        if(bytes(sorted_tail).length == 0)
         {
             return;    
         }
         return (objects[sorted_head].key, objects[sorted_head].value, objects[sorted_head].prev, objects[sorted_head].next, objects[sorted_head].sorted_prev, objects[sorted_head].sorted_next);
     }
 }
+
+
+
