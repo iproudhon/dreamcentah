@@ -21,7 +21,7 @@ contract DLL
     string public tail;
 
     mapping(string=>node) private objects;
-    string constant public NULL = "";
+    string constant NULL = "";
     
     function compare(string _a, string _b) public pure returns (int) {
         bytes memory a = bytes(_a);
