@@ -72,7 +72,7 @@ function getTargetKey(key) { //linear search done outside
 }
 
 function update(key, value) { 
-  return DLL_instance_instance.update(key, value, {from:eth.accounts[0], gas:1000000});
+  return DLL_instance.update(key, value, {from:eth.accounts[0], gas:1000000});
 }
 
 function insert(key, value) { //find the way to do mining asynchronously
