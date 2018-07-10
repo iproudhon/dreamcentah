@@ -78,12 +78,22 @@ function testPopulate() {
   DLL.insert("3", "3", "3", {from:eth.accounts[0], gas:1000000});
 }
 
-function getTargetKey(key) { //linear search done outside 
-  e = DLL.getEntry(DLL.sorted_head());
+function getTargetKey(key) { //linear search done outside returns index before, "" if it is at front
+  e = DLL.getSortedHead();
+ 
+  if(key <= e[0]) {
+    return "";
+  }
+  
+  a = DLL.sorted_tail();
+  if(key >= a) {
+    return a;
+  }
+  
   while (key >= e[0] && e[0] != DLL.sorted_tail()) {
     e = DLL.getEntry(e[5]);
   }
-   return e[0];
+  return e[4];
 }
 
 function update(key, value) { 
@@ -91,14 +101,9 @@ function update(key, value) {
 }
 
 function insert(key, value) { //find the way to do mining asynchronously
-  if(DLL.head() == "NULL") {
+  if(DLL.head() == "") {
     DLL.insert(key, value, "0", {from:eth.accounts[0], gas:1000000});
     return 0;
-  }
-  
-  if(key > DLL.sorted_tail() || key < DLL.sorted_head()) {
-    DLL.insert(key, value, "0", {from:eth.accounts[0], gas:1000000});
-    return 1;
   }
   
   targetkey = getTargetKey(key);
