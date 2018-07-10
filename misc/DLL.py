@@ -3,6 +3,7 @@ import json
 import threading 
 import sys
 import time
+import timeit
 
 from web3 import Web3
 from web3.contract import ConciseContract 
@@ -59,6 +60,7 @@ def sortedIterateReverse(start, end):
         e = reader.getEntry(e[4])
 
 def testPopulate(length, head = ''):
+
     for i in range(int(length)):
         insert(head + str(i), head + str(i))
     return True 
