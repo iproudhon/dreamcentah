@@ -5,8 +5,9 @@ command: sudo apt-get install python3
 install web3 python api 
 command: sudo pip install web3 
 
-run python console from terminal 
-Import python module onto the terminal: 
+------------------------------------------------------------------------------
+option 1: run python console from terminal 
+Import python module into the terminal: 
 
 import importlib.util 
 spec = importlib.util.spec_from_file_location("module.name", "/path/to/file.py")
@@ -16,3 +17,9 @@ spec.loader.exec_module(foo)
 test your functions: 
 foo.<function name>() 
 
+------------------------------------------------------------------------------
+option 2: run the program from terminal 
+
+command: python DLL.py <function name> <parameters.....> 
+
+no need to put quotation marks around the parameters
