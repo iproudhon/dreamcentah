@@ -96,7 +96,7 @@ function getTargetKey(key) { //linear search done outside returns index before, 
   return e[4];
 }
 
-function insert(key, value) { //find the way to do mining asynchronously
+function insert(key, value, update) { //find the way to do mining asynchronously
   if(key == ""){
     return 0; 
   }
@@ -107,7 +107,7 @@ function insert(key, value) { //find the way to do mining asynchronously
   }
   
   targetkey = getTargetKey(key);
-  DLL.insert(key, value, targetkey, {from:eth.accounts[0], gas:1000000});
+  DLL.insert(key, value, targetkey, update, {from:eth.accounts[0], gas:1000000});
   return 2;
 }
 
