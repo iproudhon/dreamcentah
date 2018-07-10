@@ -4,11 +4,7 @@ import threading
 import sys
 import time
 
-
-#mining function to be implemented, execution from the terminal to be implemented 
-
 from web3 import Web3
-from web3.miner import Miner
 from web3.contract import ConciseContract 
 
 #get abi and bin(contract_data) from compiler 
@@ -26,7 +22,6 @@ write_function_count = 0
 latest_tx_hash = None
 
 def iterate():
-    read()
     key = reader.head()
     e = reader.getEntry(key)
     while len(e[0]) != 0:
@@ -34,7 +29,6 @@ def iterate():
         e = reader.getEntry(e[3])
 
 def iterateReverse():
-    read()
     key = reader.tail()
     e = reader.getEntry(key)
     while len(e[0]) != 0:
@@ -42,7 +36,6 @@ def iterateReverse():
         e = reader.getEntry(e[2])
 
 def sortedIterate():
-    read()
     key = reader.sorted_head()
     e = reader.getEntry(key)
     while len(e[0]) != 0:
@@ -50,7 +43,6 @@ def sortedIterate():
         e = reader.getEntry(e[5])
 
 def sortedIterateReverse():
-    read()
     key = reader.sorted_tail()
     e = reader.getEntry(key)
     while len(e[0]) != 0:
@@ -58,76 +50,55 @@ def sortedIterateReverse():
         e = reader.getEntry(e[4])
 
 def testPopulate():
-    global latest_tx_hash
     for i in range(10):
-        write()
         latest_tx_hash = contract_instance.functions.insert(str(i), str(i), str(i)).transact()
     return True 
 
 def getTargetKey(key):
-    e = reader.getEntry(reader.sorted_head())
+    e = reader.getSortedHead()
     while key >= e[0] and e[0] != reader.sorted_tail():
         e = reader.getEntry(e[5])
     return e
 
 def insert(key, value): 
-    write()
-    global latest_tx_hash
-    if reader.head() == 'NULL':
-        latest_tx_hash = contract_instance.functions.insert(key, value, "0").transact()
-        return 0
+    if reader.head() == 'NULL': #question: what should the targetkey be? 
+        tx_hash = contract_instance.functions.insert(key, value, "0").transact()
     elif key > reader.sorted_tail() or key < reader.sorted_head():
-        latest_tx_hash = contract_instance.functions.insert(key, value, "0").transact()
-        return 1
+        tx_hash = contract_instance.functions.insert(key, value, "0").transact()
     else: 
         targetkey = getTargetKey(key)
-        latest_tx_hash = contract_instance.functions.insert(key, value, targetkey).transact()
-    return 2
-
-def update(key, value):
-    write() 
-    global latest_tx_hash
-    latest_tx_hash = contract_instance.functions.update(key, value).transact()
-    return latest_tx_hash
+        tx_hash = contract_instance.functions.insert(key, value, targetkey).transact()
+    print(str(tx_hash))
 
 def remove(targetkey):
-    write() 
-    global latest_tx_hash
-    latest_tx_hash = contract_instance.functions.remove(targetkey).transact()
-    return latest_tx_hash
+    tx_hash = contract_instance.functions.remove(targetkey).transact()
+    return tx_hash
 
-def clear():
-    write() 
-    global latest_tx_hash
-    latest_tx_hash = contract_instance.functions.clear().transact()
-    return latest_tx_hash
-
-def pop_back():
-    write()
-    return 
-
-def write():
-    global write_function_count
-    global latest_tx_hash
-    if write_function_count == 10: 
-        wait_for_receipt(w3, latest_tx_hash, 1) 
-    write_function_count += 1 
-
-def read():
-    global latest_tx_hash
-    if latest_tx_hash != None: 
-        wait_for_receipt(w3, latest_tx_hash, 1)
-
-def wait_for_receipt(w3, tx_hash, poll_interval):
-    while True:
-        tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
-        if tx_receipt: 
-            return tx_receipt
-        time.sleep(poll_interval)
-
-
-
+def main(): 
     
-
-
-
+    function_call = sys.argv[1]
+    if len(sys.argv) > 2: 
+        parameters = sys.argv[2:]
+    
+    if function_call == 'insert':
+        insert(parameters[0], parameters[1])
+    elif function_call == 'remove':
+        remove(parameters[0])
+    elif function_call == 'iterate':
+        iterate()
+    elif function_call == 'testPopulate':
+        testPopulate()
+    elif function_call == 'iterateReverse':
+        iterateReverse()
+    elif function_call == 'sortedIterate':
+        sortedIterate()
+    elif function_call == 'sortedIterateReverse':
+        sortedIterateReverse()
+    elif function_call == 'getTargetKey':
+        getTargetKey()
+    else:
+        print('Error: ' + function_call + ' function not found')
+        print('Usage: DLL.py <function name> <parameter1, parameter2...>') 
+        print('No need to put quotation mark around parameters')
+if __name__ == '__main__':
+    main()
