@@ -23,7 +23,6 @@ function iterate()
       }
     }
     console.log("|", e[0],"|", e[1], "|", e[2],"|", e[3],"|", e[4],"|", e[5], "|");
-    console.log(e[5] == "");
   }
 }
 
