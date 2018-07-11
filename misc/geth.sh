@@ -41,7 +41,7 @@ function start ()
     [ -d "${DIR}" ] || die "${DIR} not found"
     [ -d "${DIR}/logs" ] || mkdir -p ${DIR}/logs
     stop
-    nohup ${GETH} --datadir ${DIR} --nodiscover --networkid ${CHAINID} > ${DIR}/logs/log 2>&1 &
+    nohup ${GETH} --datadir ${DIR} --nodiscover --networkid ${CHAINID} --rpc > ${DIR}/logs/log 2>&1 &
 }
 
 function stop ()
