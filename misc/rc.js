@@ -19,10 +19,10 @@ function iterate()
   for (e = DLL.getEntry(key); e[0].length != 0; e = DLL.getEntry(e[3])) {
     for(i = 0; i<5; i++) {
       if(e[i] == "") {
-         e[i] = " ";
+         e[i] = " "; //just for readability null is a " "
       }
     }
-    console.log(e[0], e[1], e[2], e[3], e[4], e[5]);
+    console.log(e[0],"|", e[1], "|", e[2],"|", e[3],"|", e[4],"|", e[5]);
   }
 }
 
@@ -35,7 +35,7 @@ function iterate_reverse()
          e[i] = " ";
       }
     }
-    console.log(e[0], e[1], e[2], e[3], e[4], e[5]);
+    console.log(e[0],"|", e[1], "|", e[2],"|", e[3],"|", e[4],"|", e[5]);
   }
 }
 
@@ -48,7 +48,7 @@ function sorted_iterate()
          e[i] = " ";
       }
     }
-    console.log(e[0], e[1], e[2], e[3], e[4], e[5]);
+    console.log(e[0],"|", e[1], "|", e[2],"|", e[3],"|", e[4],"|", e[5]);
   }
 }
 
@@ -61,14 +61,14 @@ function sorted_iterate_reverse()
          e[i] = " ";
       }
     }
-    console.log(e[0], e[1], e[2], e[3], e[4], e[5]); 
+    console.log(e[0],"|", e[1], "|", e[2],"|", e[3],"|", e[4],"|", e[5]); 
   }
 }
 
 function unlock() 
 {
   for(i = 0; i < eth.accounts.length; i++) {
-    personal.unlockAccount(eth.accounts[i], "1", 36000);
+    personal.unlockAccount(eth.accounts[i], "pass", 36000);
   } 
 }
 
