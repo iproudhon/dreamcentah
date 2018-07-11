@@ -102,7 +102,7 @@ function insert(key, value, update) { //find the way to do mining asynchronously
   }
   
   if(DLL.head() == "") {
-    DLL.insert(key, value, "0", {from:eth.accounts[0], gas:1000000});
+    DLL.insert(key, value, "0", update, {from:eth.accounts[0], gas:1000000});
     return 1;
   }
   
