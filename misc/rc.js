@@ -73,9 +73,9 @@ function unlock()
 }
 
 function testPopulate() {
-  DLL.insert("1", "1", "1", {from:eth.accounts[0], gas:1000000});
-  DLL.insert("2", "2", "2", {from:eth.accounts[0], gas:1000000});
-  DLL.insert("3", "3", "3", {from:eth.accounts[0], gas:1000000});
+  DLL.insert("1", "1", "1", false, {from:eth.accounts[0], gas:1000000});
+  DLL.insert("2", "2", "2", false, {from:eth.accounts[0], gas:1000000});
+  DLL.insert("3", "3", "3", false, {from:eth.accounts[0], gas:1000000});
 }
 
 function getTargetKey(key) { //linear search done outside returns index before, "" if it is at front
