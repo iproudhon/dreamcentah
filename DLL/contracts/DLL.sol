@@ -112,6 +112,10 @@ contract DLL
         {
             delete objects[targetkey];
             length--;
+            head = nil;
+            tail = nil;
+            sorted_head = nil;
+            sorted_tail = nil;
             return true;
         }
         
@@ -190,10 +194,9 @@ contract DLL
         {
             return;    
         }
-        return (objects[sorted_head].key, objects[sorted_head].value, objects[sorted_head].prev, objects[sorted_head].next, objects[sorted_head].sorted_prev, objects[sorted_head].sorted_next);
+        return (objects[sorted_tail].key, objects[sorted_tail].value, objects[sorted_tail].prev, objects[sorted_tail].next, objects[sorted_tail].sorted_prev, objects[sorted_tail].sorted_next);
     }
 }
-
 
 
 
