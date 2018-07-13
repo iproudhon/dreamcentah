@@ -96,7 +96,7 @@ function getTargetKey(key) { //linear search done outside returns index before, 
   return e[4];
 }
 
-function insert(key, value, update) { //find the way to do mining asynchronously
+function insert(key, value, update) {
   if(key == ""){
     return 0; 
   }
