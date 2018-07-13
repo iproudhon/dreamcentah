@@ -1,0 +1,35 @@
+pragma solidity ^0.4.24;
+
+contract Token {
+    string public name; 
+
+    /// @param account The address from which the balance will be retrieved
+    /// @return The balance
+    function getBalance(address account) constant returns(uint256 balance) {
+
+    }
+
+    mapping(address => uint256) balances; //user address to balances 
+    
+    uint256 public totalSupply; 
+}
+
+contract standardToken is Token  {
+
+}
+
+contra
+
+///ledger logs 
+event Order(address, uint, address, uint , uint expires)
+event Cancel()
+event Trade()
+
+contract Exchange{ 
+    address public admin;
+    address public feeAccount; //account to receive fee 
+    uint public fee; //percentage times 
+    mapping (address => mapping(address => uint)) public tokens; //token address mapped to mapping of accounts to balance 
+    mapping (address => mapping (bytes32=> bool)) public orders; mapping of user accounts to mapping of order 
+
+}
