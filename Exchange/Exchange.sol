@@ -11,87 +11,130 @@ contract Token {
 
     /// @param account The address from which the balance will be retrieved
     /// @return The balance
-    function getBalance(address account) constant returns(uint256 balance) {
+    function getBalance(address account) public view returns(uint256 balance) {
         return balances[account];
     }
 
     /// @param to the address to which the token will be transferred 
     /// @param value the amount of token to be transferred 
     /// @return whether the transfer was successful 
-    function transfer(adress to, uint256 value) returns (bool success) {
+    function transfer(adress to, uint256 value) public returns (bool success) {
         if (balances[msg.sender] >= _value && balances[_to] + _value > balances[_to]) {
-        balances[msg.sender] -= _value;
-        balances[_to] += _value;
-        Transfer(msg.sender, _to, _value);
-        return true;
-        } else { return false; }
+            balances[msg.sender] -= _value;
+            balances[_to] += _value;
+            emit Transfer(msg.sender, _to, _value);
+            return true;
+        } else {return false;}
     }
 }
 
-contract account { 
-   DLL allOrders;
-   DLL openBuyOrders;
-   DLL openSellOrders;
-   DLL settledOrders;
-   DLL canceledOrders;
+contract account {
+    address public owner = msg.sender;
+    Exchange exchange;  
+    ExchangeDLL Orders;
 
+    //Token address to balance 
 
+    function sellLimitOrder(string tokenName, string price, string amount) public {
+        
+        //If the orderKey is not empty, then update with higher amount 
+        while (bytes(allOrders.getEntry(orderKey)[1]) != 0 ) {
+            string orderKey = bytes32ToString(keccak256(msg.sender, tokenName, price, amount));
+            orderKey = bytes32ToString(keccak256(orderKey)); //get a different orderKey if it already exists
+        }
+        _orderKey = "s" + orderKey;
+        _price = "price:" + price;
+        _amount = "amount:" + amount;
+        string orderDetails = tokenName + _price + _amount;
 
-   function sellLimitOrder(string tokenName, string price, string amount) {
-       string orderKey = keccak256(msg.sender, tokenName, price, amount); //If the orderKey is not empty, then update with higher amount 
-       while (bytes(allOrders.getEntry(orderKey)[1]) != 0 ) {
-           orderKey = keccak256(orderKey); //get a different orderKey if it already exists       }
-       }
-       price = 'price:' + price;
-       amount = 'amount:' + amount;
+        Orders.insert(_orderKey, orderDetails);
+        exchange.sellOrder(_orderKey, orderDetails); //also put this into the global level
+        
+        return (orderKey, orderDetails);
+    }
 
-       allSellOrders.insert(orderKey, tokenName + price + amount); 
-       openSellOrders.insert(orderKey, tokenName + price + amount);
-   }
+    function buyLimitOrder(string tokenName, string price, string amount) public {
+      //checking if the account has sufficient fund will be done outside
+        string orderKey = bytes32ToString(keccak256(msg.sender, tokenName, price, amount));
+        while (bytes(allOrders.getEntry(orderKey)[1]) != 0 ) {
+            orderKey = bytes32ToString(keccak256(orderKey)); //get a different orderKey if it already exists
+        }
+        _orderKey = "b" + orderKey;
+        _price = "price:" + price;
+        _amount = "amount:" + amount;
+        string orderDetails = tokenName + _price + _amount;
+
+        Orders.insert(_orderKey, orderDetails);
+        exchange.buyOrder(_orderkey, orderDetails); 
+        return (orderKey, orderDetails);
+    }
+
+    function sellMarketOrder(string tokenName, string amount) public {
+        string price = exchange.getMarketSellPrice();
+        sellLimitOrder(tokenName, price, amount);
+    }
+
+    function buyMarketOrder(string tokenName, string amount) public {
+        string price = exchange.getMarketBuyPrice();
+        buyLimitOrder(tokenName, price, amount);
+    }
+
+    function cancelOrder(string orderKey) public {
+        Orders.cancel(orderKey); //this will move the order to the canceled list 
+    }
+
+    function settleOrder(string orderKey) public { 
+        Orders.settle(orderKey); //this will move the order to the settled list 
+    }
+
+    function bytes32ToString(bytes32 x) internal view returns (string) {
+        bytes memory bytesString = new bytes(32);
+        uint charCount = 0;
+        for (uint j = 0; j < 32; j++) {
+            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+            if (char != 0) {
+                bytesString[charCount] = char;
+                charCount++;
+            }
+        }
+        bytes memory bytesStringTrimmed = new bytes(charCount);
+        for (j = 0; j < charCount; j++) {
+            bytesStringTrimmed[j] = bytesString[j];
+        }
+        return string(bytesStringTrimmed);
+    }
+    
 }
 
-contract Exchange{ //Quote Driven market as opposed to order driven market 
-    DLL gAllOrders;
-    DLL gOpenOrders;
-    DLL gSettledOrders;
-    DLL gCanceledOrders;
+contract Exchange {
+    ExchangeDLL Orders; //sell and buy order should be ordered according to price 
+    mapping (string => address) public tokens; //mapping of token name to token address 
 
-    mapping (address => mapping(address => uint)) public tokens; //token address mapped to mapping of accounts to balance 
-    mapping (address => mapping (bytes32=> bool)) public orders; mapping of user accounts to mapping of order 
-
-    function deposit() payable { //tokens[0] represents ethereum
+    function deposit()  public payable { //tokens[0] represents ethereum
         if (msg.value > 0)
             tokens[0][msg.sender] += msg.value;
     }
 
-    function withdraw(address _to, uint amount) {
-        if (tokens[0][msg.sender] < amount) throw; 
+    function withdraw(address _to, uint amount) public {
+        if (tokens[0][msg.sender] < amount) revert(); 
         tokens[0][msg.sender] -= amount;
         //transfer to _to address 
     }
 
-    function sellLimitOrder(uint amount, uint price, address token_address) {
-        
+    function createOrder(string orderKey, string orderDetails) public {
+        Orders.insert(_orderKey, orderDetails);
     }
 
-    function buyLimitOrder(uint amount, address token_address) {
-
+    function getMarketPrice() public { //takes an average of highest buy price and lowest sell price  
+         
     }
 
-    function sellMarketOrder(uint amount) {
-
+    function settle() public { //matches the buy order and sell order and allocate the tokens being exchanged into the correct accounts
+    //update the status of the orders on account level and global level
+    
     }
 
-    function buyMarketOrder(uint amount) {
-
-    }
-
-    function settle() {
-
-    }
-
-    function cancelOrder() {
-
+    function cancelOrder() public {
     }
      
 }
