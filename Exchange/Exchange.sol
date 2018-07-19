@@ -1,7 +1,5 @@
 pragma solidity ^0.4.9;
 
-import "browser/exDLL.sol";
-
 contract Token {
     string public name; 
     uint256 public totalSupply; 
