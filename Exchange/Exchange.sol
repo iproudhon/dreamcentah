@@ -1,6 +1,6 @@
 pragma solidity ^0.4.9;
 
-import "browser/exDLL.sol";
+import "exDLL.sol";
 
 contract Token {
     string public name; 
@@ -28,10 +28,15 @@ contract Token {
     }
 }
 
-contract account {
+contract Account {
     address public owner = msg.sender;
     Exchange exchange;  
     exDLL Orders;
+
+    function Account(address A, address B) public {
+        exchange = Exchange(A);
+        Orders = exDLL(B);
+    }
 
     //Token address to balance 
 
@@ -44,14 +49,11 @@ contract account {
             orderKey = bytes32ToString(keccak256(orderKey)); //get a different orderKey if it already exists
         }
         string storage _orderKey = "s" + orderKey;
-        string storage _price = "price:" + price;
-        string storage _amount = "amount:" + amount;
-        string storage orderDetails = tokenName + _price + _amount;
 
-        Orders.insert(_orderKey, orderDetails);
-        exchange.sellOrder(_orderKey, orderDetails); //also put this into the global level
+        Orders.insert(_orderKey, tokenName, price, amount);
+        exchange.createOrder(_orderKey, tokenName, price, amount); //also put this into the global level
         
-        return (orderKey, orderDetails);
+        return (orderKey, tokenName, price, amount);
     }
 
     function buyLimitOrder(string tokenName, string price, string amount) public {
@@ -61,13 +63,10 @@ contract account {
             orderKey = bytes32ToString(keccak256(orderKey)); //get a different orderKey if it already exists
         }
         string storage _orderKey = "b" + orderKey;
-        string storage _price = "price:" + price;
-        string storage _amount = "amount:" + amount;
-        string storage orderDetails = tokenName + _price + _amount;
 
-        Orders.insert(_orderKey, orderDetails);
-        exchange.createOrder(_orderKey, orderDetails); 
-        return (orderKey, orderDetails);
+        Orders.insert(_orderKey, tokenName, price, amount);
+        exchange.createOrder(_orderKey, tokenName, price, amount); 
+        return (orderKey, tokenName, price, amount);
     }
 
     function sellMarketOrder(string tokenName, string amount) public {
@@ -80,12 +79,9 @@ contract account {
         buyLimitOrder(tokenName, price, amount);
     }
 
-    function cancelOrder(string orderKey) public {
+    function cancelOrder(string targetKey) public {
+        exchange.cancelOrder(targetKey);
         Orders.cancel(orderKey); //this will move the order to the canceled list 
-    }
-
-    function settleOrder(string orderKey) public { 
-        Orders.settle(orderKey); //this will move the order to the settled list 
     }
 
     function bytes32ToString(bytes32 x) internal view returns (string) {
@@ -104,12 +100,16 @@ contract account {
         }
         return string(bytesStringTrimmed);
     }
-    
 }
 
 contract Exchange {
-    exDLL Orders; //sell and buy order should be ordered according to price 
+    exDLL Orders; //sell and buy order should be ordered according to price
+    mapping (string => address) public orders; //mapping of orderKeys to address
     mapping (string => address) public tokens; //mapping of token name to token address 
+
+    function Exchange(address A) public {
+        Orders = exDLL(A);
+    }
 
     function deposit()  public payable { //tokens[0] represents ethereum
         if (msg.value > 0)
@@ -117,25 +117,32 @@ contract Exchange {
     }
 
     function withdraw(address _to, uint amount) public {
-        if (tokens[0][msg.sender] < amount) revert(); 
+        if (tokens[0][msg.sender] < amount) revert();
         tokens[0][msg.sender] -= amount;
         //transfer to _to address 
     }
 
-    function createOrder(string orderKey, string orderDetails) public {
-        Orders.insert(orderKey, orderDetails);
+    function createOrder(string orderKey, string price, string amount) public {
+        orders[orderKey] = msg.sender;
+        Orders.insert(orderKey, price, amount);
     }
 
     function getMarketPrice() public { //takes an average of highest buy price and lowest sell price  
-         
+        return Orders.getMarketPrice(); 
     }
 
-    function settle() public { //matches the buy order and sell order and allocate the tokens being exchanged into the correct accounts
+    function settle() public {
+    //matches the buy order and sell order and allocate the tokens being exchanged into the correct accounts
     //update the status of the orders on account level and global level
-    
+        if (Orders.needSettle()) {
+            sellOrder = Orders.getElement(Orders.sellTail());
+            string buyOrder =  
+
+        }
+        Orders.settle();
     }
 
     function cancelOrder() public {
+        Orders.cancel(targetKey);
     }
-     
 }
