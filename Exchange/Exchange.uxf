@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.2">
+  <zoom_level>9</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1359</x>
+      <y>144</y>
+      <w>189</w>
+      <h>171</h>
+    </coordinates>
+    <panel_attributes> Exchange Interface
+--
+Wallet Interface 
+Balance 
+Withdraw 
+Deposit 
+--
+Market Interface 
+Place Market Orders 
+Place Limit Orders
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1359</x>
+      <y>405</y>
+      <w>189</w>
+      <h>171</h>
+    </coordinates>
+    <panel_attributes>Contract Token
+--
+
+--
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLActor</id>
+    <coordinates>
+      <x>1638</x>
+      <y>252</y>
+      <w>72</w>
+      <h>99</h>
+    </coordinates>
+    <panel_attributes>Interface </panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1539</x>
+      <y>225</y>
+      <w>135</w>
+      <h>81</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;130.0;70.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1449</x>
+      <y>306</y>
+      <w>27</w>
+      <h>117</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>855</x>
+      <y>360</y>
+      <w>189</w>
+      <h>171</h>
+    </coordinates>
+    <panel_attributes>Buy order queue
+--
+0.1000 |||
+--
+0.9998 |||||
+--
+0.9997 ||||||
+--
+0.9996 |||
+--
+0.9994 |||||||
+--
+0.9990 ||||
+--
+0.9987 ||||||
+--
+0.9970 ||||||||||||</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>855</x>
+      <y>108</y>
+      <w>189</w>
+      <h>171</h>
+    </coordinates>
+    <panel_attributes>Sell order queue
+--
+0.1050 |||||
+--
+0.1040 |||||||||||
+--
+0.1030 |||||||||
+--
+0.1020 |||| 
+--
+0.1010 ||||||
+--
+0.1008 ||||
+--
+0.1007 ||||||||||
+--
+0.1004 |||||||||||||||</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>864</x>
+      <y>306</y>
+      <w>162</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>Market Price : 0.1002</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>999</x>
+      <y>279</y>
+      <w>324</w>
+      <h>54</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+Real one different from displayed value</panel_attributes>
+    <additional_attributes>30.0;40.0;70.0;40.0;70.0;10.0;10.0;10.0;10.0;30.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1548</x>
+      <y>342</y>
+      <w>126</w>
+      <h>144</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;140.0;120.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>1611</x>
+      <y>414</y>
+      <w>90</w>
+      <h>81</h>
+    </coordinates>
+    <panel_attributes>Query Balance, 
+Withdraw,
+Deposit
+style=wordwrap</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1044</x>
+      <y>243</y>
+      <w>324</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;340.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>702</x>
+      <y>297</y>
+      <w>108</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>Settle algorithm</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>225</x>
+      <y>234</y>
+      <w>450</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>Simple Settle algorithm
+--
+called repetitively (while True:)  
+--
+read from sell order queue, match with first buy order queue
+if not complete, wait until new order 
+--
+Match 
+seller gets amount promised - fee 
+Buyer gets amount promised - fee 
+Amount locked for the exchange deleted from their account balance </panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
