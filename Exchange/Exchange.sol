@@ -26,9 +26,7 @@ contract Currency {
     }
 }
 
-contract Exchange {
-    exDLL Orders; //sell and buy order should be ordered according to price
-    
+contract Exchange {    
     struct order {
         address account;
         bytes32 orderKey; 
@@ -70,23 +68,21 @@ contract Exchange {
         string amount
     );
 
-    address[] public accounts;
-
+    mapping(string => mapping(address=>uint)) public balance;
     mapping(bytes32=>order) private orders; //mapping of orderkeys to order objects
     mapping (address => bytes32[]) public accountOrders; //mapping of account address to orderKeys
     mapping (string => address) public currencies; //mapping of token name to token address 
 
     event order(address account, string giveCurrencyName, string getCurrencyName, string price, string amount);
     
-    function deposit()  public payable { //tokens[0] represents ethereum
-        if (msg.value > 0)
-            currencies[0][msg.sender] += msg.value;
+    function deposit(address account, string currencyName, uint amount)  public {
+        if (amount > 0)
+            balance[currencyName][account] += amount; 
     }
 
-    function withdraw(address _to, uint amount) public {
-        if (tokens[0][msg.sender] < amount) revert();
-        tokens[0][msg.sender] -= amount;
-        //transfer to _to address 
+    function withdraw(address account, string currencyName, uint amount) public {
+        if (balance[currencyName][account] >= amount)
+            balance[currencyName][account] -= amount;  
     }
 
     function createLimitOrder(
@@ -113,8 +109,6 @@ contract Exchange {
     }
 
     function getMarketPrice(strig giveCurrencyName, string getCurrencyName) public { 
-        
-    
     }
 
     function cancelOrder(bytes32 targetOrderKey) public {
@@ -124,33 +118,7 @@ contract Exchange {
     function settle() public {
     //matches the buy order and sell order and allocate the tokens being exchanged into the correct accounts
     //update the status of the orders on account level and global level
-        while (Orders.needSettle()) {
-            sellOrder = Orders.getElement(Orders.sellTail()); //use log later 
-            uint fill = 0;
-            uint sellAmount;
-            uint sellPrice; 
-            uint buyAmount; 
-            uint buyPrice;
-            string[] matchingBuys; //array to store matching buy orders for a sell order 
-            while(fill < sellAmount && buyPrice >= sellPrice) {
-                buyOrder = Orders.getElement(Orders.buyHead());
-                if(buyAmount > sellAmount - fill) {
-                    fill = sellAmount; 
-                    
-                }
-                else if (buyAmount < sellAmount - fill) {
-                    fill += buyAmount; 
-                    matchingBuys.put(buyOrder.orderKey);
-                }
-                else if (buyAmount == sellAmount - fill) { 
-                    fill = buyAmount; 
-                    matchingBuys.put(buyuOrder.orderKey);
-                }
 
-            }
-
-        }
-        Orders.settle();
     }
 
     function insert(
