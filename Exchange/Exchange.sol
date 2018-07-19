@@ -1,7 +1,10 @@
 pragma solidity ^0.4.9;
 
+<<<<<<< HEAD
 import "exDLL.sol";
 
+=======
+>>>>>>> efd0db527d438f40e14189e441956fd2e190f58d
 contract Token {
     string public name; 
     uint256 public totalSupply; 
