@@ -45,20 +45,20 @@ contract Exchange {
     uint public length = 0;
     uint public sell_length = 0;
     uint public buy_length = 0;
-    uint public canceled_length = 0;
+    uint public cancelled_length = 0;
     uint public settled_length = 0;
     bytes32 public sell_head;
     bytes32 public sell_tail;
     bytes32 public buy_head;
     bytes32 public buy_tail;
-    bytes32 public canceled_head;
-    bytes32 public canceled_tail;
+    bytes32 public cancelled_head;
+    bytes32 public cancelled_tail;
     bytes32 public settled_head; 
     bytes32 public settled_tail; 
     bytes32 public head;
     bytes32 public tail;
-    string constant nil = "";
-
+    bytes32 constant nil = "";
+    
     event Order (
         bytes32 orderKey,
         address account, 
@@ -108,7 +108,8 @@ contract Exchange {
         createLimitOrder(account, giveCurrencyName, getCurrencyName, price, amount);
     }
 
-    function getMarketPrice(strig giveCurrencyName, string getCurrencyName) public { 
+    function getMarketPrice(strig giveCurrencyName, string getCurrencyName) public {
+        
     }
 
     function cancelOrder(bytes32 targetOrderKey) public {
@@ -121,40 +122,34 @@ contract Exchange {
 
     }
 
-    function insert(
-        address _account,
-        bytes32 orderKey,
-        string _giveCurrencyName,
-        string _getcurrencyName,
-        string _price,
-        string _amount
-    )
-        public 
-    {
-        if(orderKey.length == 0)
+    function insert(bytes32 orderKey, string giveCurr, string getCurr,
+                    string price, address account, string amount) public returns (bool) {
+                        
+        if(orderKey.length == 0) {
             return false; 
+        }
 
-        order memory _order;
-        _order.account = _account;
-        _order.giveCurrencyName = _giveCurrencyName;
-        _order.getCurrencyName = _getcurrencyName;
-        _order.price = _price;
-        _order.amount = _amount;
-        orders[orderKey] = _order;
-         
-        head = orderKey; 
-        tail = orderKey;
+        //instantiate
+        order memory ord; 
+        orders[orderKey] = ord;
+        orders[orderKey].orderKey = orderKey;
+        orders[orderKey].account = account;
+        orders[orderKey].giveCurrencyName = giveCurr;
+        orders[orderKey].getCurrencyName = getCurr;
+        orders[orderKey].price = price;
+        orders[orderKey].amount = amount; 
         
         if(length == 0) {
+            
             head = orderKey;
             tail = orderKey;
 
-            if(keccak256(_giveCurrencyName) == keccak256("USD") {
+            if(keccak256(bytes(giveCurr)) == keccak256("USD")) {
                 buy_head = orderKey;
                 buy_tail = orderKey;
                 buy_length++;
             }
-            else if(keccak256(_giveCurrencyName) == keccak256("BitCoin")) {
+            else if(keccak256(bytes(giveCurr)) == keccak256("BitCoin")) {
                 sell_head = orderKey;
                 sell_tail = orderKey;
                 sell_length++;
@@ -164,27 +159,26 @@ contract Exchange {
         }
         
         //cannot just put in previous if statement as it can't set the head that is not the first
-        if(_giveCurrencyName == "USD" && buy_length == 0) {
+        if(keccak256(bytes(giveCurr)) == keccak256("USD") && buy_length == 0) {
             buy_head = orderKey; 
             buy_tail = orderKey; 
             buy_length++;
         }
         //regular case where sell_length > 0
-        else if(_giveCurrencyName == "USD") { // if it is s sell at the start of string
+        else if(keccak256(bytes(giveCurr)) == keccak256("USD")) { 
             orders[orderKey].status_prev = buy_tail; 
             orders[buy_tail].status_next = orderKey; 
             buy_tail = orderKey; 
             buy_length++;
         }
-            
-        //cannot just put in previous if statement as it can't set the head that is not the first
-        if(_giveCurrencyName == "BitCoin" && sell_length == 0) {
+        
+        if(keccak256(bytes(giveCurr)) == keccak256("BitCoin") && sell_length == 0) {
             sell_head = orderKey; 
             sell_tail = orderKey; 
             sell_length++;
         }
         //regular case where sell_length > 0
-        else if(_giveCurrencyName == "BitCoin") { // if it is s sell at the start of string
+        else if(keccak256(bytes(giveCurr)) == keccak256("BitCoin")) { // if it is s sell at the start of string
             orders[orderKey].status_prev = sell_tail; 
             orders[sell_tail].status_next = orderKey; 
             sell_tail = orderKey; 
@@ -199,27 +193,34 @@ contract Exchange {
     }
     
     function cancel(bytes32 targetkey) public {
-        remove(targetkey);
-        if (canceled_length == 0) {
-            canceled_head = targetkey;
-            canceled_tail = targetkey;
-            canceled_length++;
-        } else {
-            orders[canceled_tail].status_next = targetkey;
-            orders[targetkey].status_prev = canceled_tail;
-            canceled_tail = targetkey;
-            canceled_length++; 
+        
+        //to make sure that a targetkey can only be cancelled from the buy/sell lists
+        if(orders[targetkey].cancelled != true && orders[targetkey].settled != true)
+        {
+            remove(targetkey);
+            if (cancelled_length == 0) {
+                cancelled_head = targetkey;
+                cancelled_tail = targetkey;
+                cancelled_length++;
+            } else {
+                orders[cancelled_tail].status_next = targetkey;
+                orders[targetkey].status_prev = cancelled_tail;
+                cancelled_tail = targetkey;
+                cancelled_length++; 
+            }
+            
+            orders[targetkey].cancelled = true;
         }
     }
 
     function remove(bytes32 targetkey) public returns (bool) { //does not destroy the object, just takes it out of the buy and sell order list 
-        if(bytes(orders[targetkey].key).length == 0 || length == 0) {
+        if(orders[targetkey].orderKey.length == 0 || length == 0) {
             //if the key value is nonexistent or if list is empty
             return false;
         }
         
         //for buy list
-        if(orders[targetkey].giveCurrencyName == "USD") {
+        if(keccak256(bytes(orders[targetkey].giveCurrencyName)) == keccak256("USD")) {
             if(targetkey == buy_head) {
                 buy_head = orders[buy_head].status_next;
                 orders[buy_head].status_prev = nil;
@@ -229,13 +230,14 @@ contract Exchange {
             } else {
                 bytes32 bprevkey = orders[targetkey].status_prev;
                 bytes32 bnextkey = orders[targetkey].status_next;
-                orders[bprevkey].sell_next = bnextkey;
-                orders[bnextkey].sell_prev = bprevkey;
+                orders[bprevkey].status_next = bnextkey;
+                orders[bnextkey].status_prev = bprevkey;
             }
+            buy_length--;
         }
         
         //for sell list
-        if(orders[targetkey].giveCurrencyName == "BitCoin") { 
+        if(keccak256(bytes(orders[targetkey].giveCurrencyName)) == keccak256("BitCoin")) { 
             if(targetkey == sell_head) {
                 sell_head = orders[sell_head].status_next;
                 orders[sell_head].status_prev = nil;
@@ -245,50 +247,58 @@ contract Exchange {
             } else {
                 bytes32 sprevkey = orders[targetkey].status_prev;
                 bytes32 snextkey = orders[targetkey].status_next;
-                orders[sprevkey].sell_next = snextkey;
-                orders[snextkey].sell_prev = sprevkey;
+                orders[sprevkey].status_next = snextkey;
+                orders[snextkey].status_prev = sprevkey;
             }
             sell_length--;
         }
     }
 
-    function sizes() public view returns (int, int, int) {
-        return (length, sell_length, buy_length);
+    function sizes() public view returns (uint, uint, uint, uint, uint) {
+        return (length, sell_length, buy_length, cancelled_length, settled_length);
     }
 
-    function getEntry(bytes32 key) public view returns (string, string, string, string) {
-        if(orders[key].key.length == 0) 
+    function getEntry(bytes32 orderKey) public view returns (bytes32, string, bytes32, bytes32) {
+        if(orders[orderKey].orderKey.length == 0) 
             return;    
         
-        //key, value, prev, next, sell_prev, sell_next, buy_prev, buy_next
-        return (orders[key].key, orders[key].value, orders[key].prev, orders[key].next, orders[key].status_next, orders[key].status_next);
+        //key, value, prev, next, status_prev, status_next, status_prev, status_next
+        return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].prev, orders[orderKey].next);
     }
     
-    function getSellHead() public view returns (string, string, string, string) {
+    function getStatusEntry(bytes32 orderKey) public view returns (bytes32, string, bytes32, bytes32) {
+        if(orders[orderKey].orderKey.length == 0) 
+            return;    
+        
+        //key, value, prev, next, status_prev, status_next, status_prev, status_next
+        return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].status_prev, orders[orderKey].status_next);
+    }
+    
+    function getSellHead() public view returns (bytes32, string, bytes32, bytes32) {
         if(sell_head.length == 0)
             return;    
         
-        return (orders[sell_head].key, orders[sell_head].value, orders[sell_head].sell_prev, orders[sell_head].sell_next);
+        return (orders[sell_head].orderKey, orders[sell_head].price, orders[sell_head].status_prev, orders[sell_head].status_next);
     }
     
-    function getSellTail() public view returns (string, string, string, string) {
+    function getSellTail() public view returns (bytes32, string, bytes32, bytes32) {
         if(sell_tail.length == 0)
             return;    
         
-        return (orders[sell_tail].key, orders[sell_tail].value, orders[sell_tail].sell_prev, orders[sell_tail].sell_next);
+        return (orders[sell_tail].orderKey, orders[sell_tail].price, orders[sell_tail].status_prev, orders[sell_tail].status_next);
     }
     
-    function getBuyHead() public view returns (string, string, string, string) {
+    function getBuyHead() public view returns (bytes32, string, bytes32, bytes32) {
         if(buy_head.length == 0) 
             return;    
         
-        return (orders[buy_head].key, orders[buy_head].value, orders[buy_head].buy_prev, orders[buy_head].buy_next);
+        return (orders[buy_head].orderKey, orders[buy_head].price, orders[buy_head].status_prev, orders[buy_head].status_next);
     }
     
-    function getBuyTail() public view returns (string, string, string, string) {
+    function getBuyTail() public view returns (bytes32, string, bytes32, bytes32) {
         if(buy_tail.length == 0)
             return;    
         
-        return (orders[buy_tail].key, orders[buy_tail].value, orders[buy_tail].buy_prev, orders[buy_tail].buy_next);
+        return (orders[buy_tail].orderKey, orders[buy_tail].price, orders[buy_tail].status_prev, orders[buy_tail].status_next);
     }
 }
