@@ -1,456 +1,229 @@
 pragma solidity ^0.4.24;
 
-contract exDLL
-{
-    struct node
-    { //buy_tail, buy_head, sell_tail, sell_head
-        int price;
-    	string sell_prev; //sorted
-	    string sell_next;
-	    string buy_prev; //sorted
-	    string buy_next;
+contract exDLL {
 
-        string prev; 
-        string next;
-        string key;
-        int amount;
-        string token;
+    struct order {
+        address account;
+        bytes32 orderKey; 
+        string giveCurrencyName;
+        string getCurrencyName; 
+        string price; 
+        string amount;
+        bytes32 prev; 
+        bytes32 next;
+        bytes32 status_prev; //in different list depending on status
+        bytes32 status_next;
+        bool cancelled;
+        bool settled;
     }
+
+    uint public length = 0;
+    uint public sell_length = 0;
+    uint public buy_length = 0;
+    uint public cancelled_length = 0;
+    uint public settled_length = 0;
+    bytes32 public sell_head;
+    bytes32 public sell_tail;
+    bytes32 public buy_head;
+    bytes32 public buy_tail;
+    bytes32 public cancelled_head;
+    bytes32 public cancelled_tail;
+    bytes32 public settled_head; 
+    bytes32 public settled_tail; 
+    bytes32 public head;
+    bytes32 public tail;
+    bytes32 constant nil = "";
+
+    mapping(bytes32=>order) private orders; //mapping of orderkeys to order objects
     
-    int public length = 0;
-    int public slength = 0; //sell length
-    int public blength = 0; //buy length
-    int public cancelLength = 0;
-    int public settleLength = 0;
-    string public sell_head;
-    string public sell_tail;
-    string public buy_head;
-    string public buy_tail;
-    string public cancel_head;
-    string public cancel_tail;
-    string public settle_head;
-    string public settle_tail;
-    string public head;
-    string public tail;
-
-    mapping(string=>node) private objects;
-    mapping(string=>node) private cancelled;
-    mapping(string=>node) private settled;
-    string constant nil = "";
-
-
-    function insert(string key, int price, bool update) public returns (bool)
-    {
-        bytes memory sb = bytes(key);
-        
-        if(bytes(key).length == 0) // if empty key
-        {
-            return false;
-        }
-        
-        /*
-        if(bytes(objects[key].key).length != 0 && update == true)
-        {
-            //update
-            objects[key].price = price;
-            return true;
-        }
-        */
-        
-        else if(update == false && bytes(objects[key].key).length != 0)
-        {
-            return false;
+    function insert(bytes32 orderKey, string giveCurr, string getCurr,
+                    string price, address account, string amount) public returns (bool) {
+                        
+        if(orderKey.length == 0) {
+            return false; 
         }
 
-        if(length == 0)
-        {
-            node memory object;
-            objects[key] = object;
-
-            objects[key].price = price;
-            objects[key].key = key;
-            //rest are nil ""
+        //instantiate
+        order memory ord; 
+        orders[orderKey] = ord;
+        orders[orderKey].orderKey = orderKey;
+        orders[orderKey].account = account;
+        orders[orderKey].giveCurrencyName = giveCurr;
+        orders[orderKey].getCurrencyName = getCurr;
+        orders[orderKey].price = price;
+        orders[orderKey].amount = amount; 
+        
+        if(length == 0) {
             
-            head = key;
-            tail = key;
-            
-            if(sb[0] == 115) {
-                sell_head = key;
-                sell_tail = key;
-                slength++;
+            head = orderKey;
+            tail = orderKey;
+
+            if(keccak256(bytes(giveCurr)) == keccak256("USD")) {
+                buy_head = orderKey;
+                buy_tail = orderKey;
+                buy_length++;
             }
-            if(sb[0] == 98) {
-                buy_head = key;
-                buy_tail = key;
-                blength++;
+            else if(keccak256(bytes(giveCurr)) == keccak256("BitCoin")) {
+                sell_head = orderKey;
+                sell_tail = orderKey;
+                sell_length++;
             }
-            
             length++;
-            return true;
+            return true; 
         }
         
-        //instantiate the node
-        node memory object1 = node(price, "", "", "", "", tail, "", key, 0, "");
-        objects[key] = object1;
-        string memory previndex;
-        string memory nextindex; // placeholder
-
         //cannot just put in previous if statement as it can't set the head that is not the first
-        if(sb[0] == 115 && slength == 0)
-        {
-            sell_head = key;
-            sell_tail = key;
-            slength++;
+        if(keccak256(bytes(giveCurr)) == keccak256("USD") && buy_length == 0) {
+            buy_head = orderKey; 
+            buy_tail = orderKey; 
+            buy_length++;
         }
-        //regular case where slength > 0
-        else if(sb[0] == 115) // if it is "s" sell at the start of string
-        {
-            string memory target = getTargetKey(price, true);
-            if(bytes(target).length == 0) //if belongs at end
-            {
-                previndex = sell_tail;
-                objects[key].sell_prev = previndex;
-                objects[sell_tail].sell_next = key;
-                sell_tail = key;
-            }
-            
-            else if(keccak256(bytes(target)) == keccak256(bytes(sell_head))) //if belongs at front
-            {
-                nextindex = sell_head;
-                objects[key].sell_next = nextindex;
-                objects[sell_head].sell_prev = key;
-                sell_head = key;
-            }
-            
-            else
-            {
-                previndex = objects[target].sell_prev;
-                nextindex = target;
-                objects[key].sell_next = nextindex;
-                objects[key].sell_prev = previndex;
-                objects[previndex].sell_next = key;
-                objects[nextindex].sell_prev = key;
-            }
-            
-            slength++;
-        }
-            
-        if(sb[0] == 98 && blength == 0)
-        {
-            buy_head = key;
-            buy_tail = key;
-            blength++;
+        //regular case where sell_length > 0
+        else if(keccak256(bytes(giveCurr)) == keccak256("USD")) { 
+            orders[orderKey].status_prev = buy_tail; 
+            orders[buy_tail].status_next = orderKey; 
+            buy_tail = orderKey; 
+            buy_length++;
         }
         
-        else if(sb[0] == 98) // if it is "b" buy at the start of string
-        {
-            string memory targetb = getTargetKey(price, false);
-            if(bytes(targetb).length == 0) //if it is "" belongs at end
-            {
-                previndex = buy_tail;
-                objects[key].buy_prev = previndex;
-                objects[buy_tail].buy_next = key;
-                buy_tail = key;
-            }
-            
-            else if(keccak256(bytes(targetb)) == keccak256(bytes(buy_head))) //if belongs at front
-            {
-                nextindex = buy_head;
-                objects[key].buy_next = nextindex;
-                objects[buy_head].buy_prev = key;
-                buy_head = key;
-            }
-            
-            else
-            {
-                previndex = objects[targetb].buy_prev;
-                nextindex = targetb;
-                objects[key].buy_next = nextindex;
-                objects[key].buy_prev = previndex;
-                objects[previndex].buy_next = key;
-                objects[nextindex].buy_prev = key;
-            }
-            
-            blength++;
+        if(keccak256(bytes(giveCurr)) == keccak256("BitCoin") && sell_length == 0) {
+            sell_head = orderKey; 
+            sell_tail = orderKey; 
+            sell_length++;
+        }
+        //regular case where sell_length > 0
+        else if(keccak256(bytes(giveCurr)) == keccak256("BitCoin")) { // if it is s sell at the start of string
+            orders[orderKey].status_prev = sell_tail; 
+            orders[sell_tail].status_next = orderKey; 
+            sell_tail = orderKey; 
+            sell_length++;
         }
         
         //by default push_back to end of order list 
-        objects[tail].next = key;
-        tail = key;
+        orders[tail].next = orderKey;
+        tail = orderKey;
 
         length++;
-        return true;
     }
     
-    function getTargetKey(int price, bool sb) public view returns (string)
-    {
-        //returns the index one after where it belongs
-        if(sb == true) // if sell list
-        {
-            string storage index = sell_head;
-            
-            while(bytes(index).length != 0)
-            {
-                if(price < objects[index].price) return index;
-                index = objects[index].sell_next;
-            }
-            return ""; // return empty if it belongs at end
-        }
+    function cancel(bytes32 targetkey) public {
         
-        else // if buy list 
+        //to make sure that a targetkey can only be cancelled from the buy/sell lists
+        if(orders[targetkey].cancelled != true && orders[targetkey].settled != true)
         {
-            string storage indexb = buy_head;
-            
-            while(bytes(indexb).length != 0)
-            {
-                if(price <= objects[indexb].price) return indexb;
-                indexb = objects[indexb].buy_next;
+            remove(targetkey);
+            if (cancelled_length == 0) {
+                cancelled_head = targetkey;
+                cancelled_tail = targetkey;
+                cancelled_length++;
+            } else {
+                orders[cancelled_tail].status_next = targetkey;
+                orders[targetkey].status_prev = cancelled_tail;
+                cancelled_tail = targetkey;
+                cancelled_length++; 
             }
-            return ""; // return empty if it belongs at end
+            
+            orders[targetkey].cancelled = true;
         }
     }
-    
 
-    function remove(string targetkey) public returns (bool)
-    {
-        bytes memory sb = bytes(targetkey);
-        
-        if(bytes(objects[targetkey].key).length == 0 || length == 0)
-        {
+    function remove(bytes32 targetkey) public returns (bool) { //does not destroy the object, just takes it out of the buy and sell order list 
+        if(orders[targetkey].orderKey.length == 0 || length == 0) {
             //if the key value is nonexistent or if list is empty
             return false;
         }
-
-        if(length == 1)
-        {
-            delete objects[targetkey];
-            length--;
-            slength = 0;
-            blength = 0;
-            head = nil;
-            tail = nil;
-            sell_head = nil;
-            sell_tail = nil;
-            buy_head = nil;
-            buy_tail = nil;
-            return true;
+        
+        //for buy list
+        if(keccak256(bytes(orders[targetkey].giveCurrencyName)) == keccak256("USD")) {
+            if(targetkey == buy_head) {
+                buy_head = orders[buy_head].status_next;
+                orders[buy_head].status_prev = nil;
+            } else if(targetkey == buy_tail) {
+                buy_tail = orders[buy_tail].status_prev;
+                orders[buy_tail].status_next = nil;
+            } else {
+                bytes32 bprevkey = orders[targetkey].status_prev;
+                bytes32 bnextkey = orders[targetkey].status_next;
+                orders[bprevkey].status_next = bnextkey;
+                orders[bnextkey].status_prev = bprevkey;
+            }
+            buy_length--;
         }
         
         //for sell list
-        if(keccak256(bytes(targetkey)) == keccak256(bytes(sell_head)))
-        {
-            sell_head = objects[sell_head].sell_next;
-            objects[sell_head].sell_prev = nil;
+        if(keccak256(bytes(orders[targetkey].giveCurrencyName)) == keccak256("BitCoin")) { 
+            if(targetkey == sell_head) {
+                sell_head = orders[sell_head].status_next;
+                orders[sell_head].status_prev = nil;
+            } else if(targetkey == sell_tail) {
+                sell_tail = orders[sell_tail].status_prev;
+                orders[sell_tail].status_next = nil;
+            } else {
+                bytes32 sprevkey = orders[targetkey].status_prev;
+                bytes32 snextkey = orders[targetkey].status_next;
+                orders[sprevkey].status_next = snextkey;
+                orders[snextkey].status_prev = sprevkey;
+            }
+            sell_length--;
         }
-        
-        else if(keccak256(bytes(targetkey)) == keccak256(bytes(sell_tail)))
-        {
-            sell_tail = objects[sell_tail].sell_prev;
-            objects[sell_tail].sell_next = nil;
-        }
-        
-        else
-        {
-            string storage sprevkey = objects[targetkey].sell_prev;
-            string storage snextkey = objects[targetkey].sell_next;
-            objects[sprevkey].sell_next = snextkey;
-            objects[snextkey].sell_prev = sprevkey;
-        }
-        
-        //for buy list
-        if(keccak256(bytes(targetkey)) == keccak256(bytes(buy_head)))
-        {
-            buy_head = objects[buy_head].buy_next;
-            objects[buy_head].buy_prev = nil;
-        }
-        
-        else if(keccak256(bytes(targetkey)) == keccak256(bytes(buy_tail)))
-        {
-            buy_tail = objects[buy_tail].buy_prev;
-            objects[buy_tail].buy_next = nil;
-        }
-        
-        else
-        {
-            string storage bprevkey = objects[targetkey].buy_prev;
-            string storage bnextkey = objects[targetkey].buy_next;
-            objects[bprevkey].buy_next = bnextkey;
-            objects[bnextkey].buy_prev = bprevkey;
-        }
-
-        //all orders list
-        if(keccak256(bytes(targetkey)) == keccak256(bytes(head)))
-        {
-            head = objects[targetkey].next;
-            objects[head].prev = nil;
-        }
-
-        else if(keccak256(bytes(targetkey)) == keccak256(bytes(tail)))
-        {
-            tail = objects[targetkey].prev;
-            objects[tail].next = nil;
-        }
-
-        else //if the entry is at neither the head or the tail of the list, at least 3 entries
-        {
-            string storage prevkey = objects[targetkey].prev;
-            string storage nextkey = objects[targetkey].next;
-            objects[prevkey].next = nextkey;
-            objects[nextkey].prev = prevkey;
-        }
-
-
-        if(sb[0] == 115) // if it is "s" sell at the start of string
-        {
-            slength--;
-        }
-            
-        else if(sb[0] == 98) // if it is "b" buy at the start of string
-        {
-            blength--;
-        }
-        delete objects[targetkey];
-        length--;
-    }
-    
-    
-    function cancel(string targetkey) public returns(bool)
-    {
-        node memory objectc = objects[targetkey];
-        cancelled[targetkey] = objectc;
-
-        if(cancelLength == 0)
-        {
-            cancel_head = targetkey;
-            cancel_tail = targetkey;
-        }
-        
-        else //standard push_back
-        {
-            cancelled[cancel_tail].next = targetkey;
-            cancelled[targetkey].prev = cancel_tail;
-            cancel_tail = targetkey;
-        }
-        
-        remove(targetkey);
-    }
-    
-    
-    function settle(string targetkey) public returns (bool)
-    {
-        node memory objectset = objects[targetkey];
-        settled[targetkey] = objectset;
-
-        if(settleLength == 0)
-        {
-            settle_head = targetkey;
-            settle_tail = targetkey;
-        }
-        
-        else //standard push_back
-        {
-            settled[settle_tail].next = targetkey;
-            settled[targetkey].prev = settle_tail;
-            settle_tail = targetkey;
-        }
-        
-        remove(targetkey);
-    }
-    
-    
-
-    function sizes() public view returns (int, int, int)
-    {
-        return (length, slength, blength);
     }
 
-    function getEntry(string key) public view returns (string, int, string, string)
-    {
-        if(bytes(objects[key].key).length == 0) 
-        {
+    function sizes() public view returns (uint, uint, uint, uint, uint) {
+        return (length, sell_length, buy_length, cancelled_length, settled_length);
+    }
+
+    function getEntry(bytes32 orderKey) public view returns (bytes32, string, bytes32, bytes32) {
+        if(orders[orderKey].orderKey.length == 0) 
             return;    
-        }
-        return (objects[key].key, objects[key].price, objects[key].prev, objects[key].next);
+        
+        //key, value, prev, next, status_prev, status_next, status_prev, status_next
+        return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].prev, orders[orderKey].next);
     }
     
-    function getSellEntry(string key) public view returns (string, int, string, string)
-    {
-        if(bytes(objects[key].key).length == 0) 
-        {
+    function getStatusEntry(bytes32 orderKey) public view returns (bytes32, string, bytes32, bytes32) {
+        if(orders[orderKey].orderKey.length == 0) 
             return;    
-        }
-        return (objects[key].key, objects[key].price, objects[key].sell_prev, objects[key].sell_next);
+        
+        //key, value, prev, next, status_prev, status_next, status_prev, status_next
+        return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].status_prev, orders[orderKey].status_next);
     }
+
     
-    function getBuyEntry(string key) public view returns (string, int, string, string)
-    {
-        if(bytes(objects[key].key).length == 0) 
-        {
+    function getSellHead() public view returns (bytes32, string, bytes32, bytes32) {
+        if(sell_head.length == 0)
             return;    
-        }
-        return (objects[key].key, objects[key].price, objects[key].buy_prev, objects[key].buy_next);
+        
+        return (orders[sell_head].orderKey, orders[sell_head].price, orders[sell_head].status_prev, orders[sell_head].status_next);
     }
     
-    function getSellHead() public view returns (string, int, string, string)
-    {
-        if(bytes(sell_head).length == 0)
-        {
+    function getSellTail() public view returns (bytes32, string, bytes32, bytes32) {
+        if(sell_tail.length == 0)
             return;    
-        }
-        return (objects[sell_head].key, objects[sell_head].price, objects[sell_head].sell_prev, objects[sell_head].sell_next);
+        
+        return (orders[sell_tail].orderKey, orders[sell_tail].price, orders[sell_tail].status_prev, orders[sell_tail].status_next);
     }
     
-    function getSellTail() public view returns (string, int, string, string)
-    {
-        if(bytes(sell_tail).length == 0)
-        {
+    function getBuyHead() public view returns (bytes32, string, bytes32, bytes32) {
+        if(buy_head.length == 0) 
             return;    
-        }
-        return (objects[sell_tail].key, objects[sell_tail].price, objects[sell_tail].sell_prev, objects[sell_tail].sell_next);
+        
+        return (orders[buy_head].orderKey, orders[buy_head].price, orders[buy_head].status_prev, orders[buy_head].status_next);
     }
     
-    function getBuyHead() public view returns (string, int, string, string)
-    {
-        if(bytes(buy_head).length == 0)
-        {
+    function getBuyTail() public view returns (bytes32, string, bytes32, bytes32) {
+        if(buy_tail.length == 0)
             return;    
-        }
-        return (objects[buy_head].key, objects[buy_head].price, objects[buy_head].buy_prev, objects[buy_head].buy_next);
+        
+        return (orders[buy_tail].orderKey, orders[buy_tail].price, orders[buy_tail].status_prev, orders[buy_tail].status_next);
     }
     
-    function getBuyTail() public view returns (string, int, string, string)
+    function testpopulate() public
     {
-        if(bytes(buy_tail).length == 0)
-        {
-            return;    
-        }
-        return (objects[buy_tail].key, objects[buy_tail].price, objects[buy_tail].buy_prev, objects[buy_tail].buy_next);
+        insert(0x1, "USD", "BitCoin", "1", 0x0, "0"); //buy
+        insert(0x2, "USD", "BitCoin", "2", 0x0, "0");
+        insert(0x3, "USD", "BitCoin", "3", 0x0, "0");
+        insert(0x4,"BitCoin","USD", "4", 0x0, "0"); //sell
+        insert(0x5,"BitCoin","USD", "5", 0x0, "0");
+        insert(0x6,"BitCoin","USD", "6", 0x0, "0");
     }
-    
-    
-    function getMarketPrice() public view returns (int)
-    {   //assume they are already multiplied by 10000
-        int answer = (objects[buy_head].price + objects[sell_tail].price)/2;
-        return answer;
-    }
-    
-    function needSettle() public view returns (bool)
-    {
-        return (objects[sell_tail].price <= objects[buy_head].price);
-    }
-    
-    /*
-    function populate() public
-    {
-        insert("s1","1", false);
-        insert("s2","2", false);
-        insert("s3","3", false);
-        insert("b1","1", false);
-        insert("b2","2", false);
-        insert("b3","3", false);
-    }
-    */
 }
-
-
-
