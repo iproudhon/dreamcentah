@@ -32,8 +32,8 @@ contract Exchange {
         bytes32 orderKey; 
         string giveCurrencyName;
         string getCurrencyName; 
-        string price; 
-        string amount;
+        uint price; //for settle function changed from string to uint
+        uint amount;
         bytes32 prev; 
         bytes32 next;
         bytes32 status_prev; //in different list depending on status
@@ -54,27 +54,16 @@ contract Exchange {
     bytes32 public cancelled_head;
     bytes32 public cancelled_tail;
     bytes32 public settled_head; 
-    bytes32 public settled_tail; 
+    bytes32 public settled_tail;
     bytes32 public head;
     bytes32 public tail;
     bytes32 constant nil = "";
-    
-    event Order (
-        bytes32 orderKey,
-        address account, 
-        string giveCurrencyName, 
-        string getCurrencyName, 
-        string price, 
-        string amount
-    );
 
     mapping(string => mapping(address=>uint)) public balance;
     mapping(bytes32=>order) private orders; //mapping of orderkeys to order objects
     mapping (address => bytes32[]) public accountOrders; //mapping of account address to orderKeys
     mapping (string => address) public currencies; //mapping of token name to token address 
 
-    event order(address account, string giveCurrencyName, string getCurrencyName, string price, string amount);
-    
     function deposit(address account, string currencyName, uint amount)  public {
         if (amount > 0)
             balance[currencyName][account] += amount; 
@@ -95,21 +84,20 @@ contract Exchange {
     ) 
         public 
     { 
-        insert(account, orderKey, giveCurrencyName, getCurrencyName, price, amount);
+        insert(account, orderkey, giveCurrencyName, getCurrencyName, price, amount);
         
         //connect the account to the order 
-        accountOrders[account].put(orderKey);
-
-        emit Order(orderKey, account, giveCurrencyName, getCurrencyName, price, amount);
+        accountOrders[account].push(orderkey);
     }
     
-    function createMarketOrder(address account, string giveCurrencyName, string getCurrencyName, string amount) public {
-        string price = getMarketPrice(giveCurrencyName, getCurrencyName); 
-        createLimitOrder(account, giveCurrencyName, getCurrencyName, price, amount);
+    function createMarketOrder(address account, bytes32 orderkey, string giveCurrencyName, string getCurrencyName, string amount) public {
+        string memory price = getMarketPrice(giveCurrencyName, getCurrencyName); 
+        createLimitOrder(account, orderkey, giveCurrencyName, getCurrencyName, price, amount);
     }
 
-    function getMarketPrice(strig giveCurrencyName, string getCurrencyName) public {
-        
+    function getMarketPrice(string giveCurrencyName, string getCurrencyName) public returns(string price) {
+        string memory marketPrice = "marketPrice";
+        return  marketPrice;
     }
 
     function cancelOrder(bytes32 targetOrderKey) public {
@@ -117,13 +105,59 @@ contract Exchange {
     }
 
     function settle() public {
-    //matches the buy order and sell order and allocate the tokens being exchanged into the correct accounts
-    //update the status of the orders on account level and global level
+        bytes32 buyOrderKey;
+        bytes32 sellOrderKey;
+        uint buyPrice;
+        uint sellPrice;
+        uint buyAmount;
+        uint sellAmount;
+
+        for (buyOrderKey = buy_head;
+            buyOrderKey.length != 0;
+            buyOrderKey = orders[buyOrderKey].status_next) {
+            
+            buyPrice = orders[buyOrderKey].price;
+            buyAmount = orders[buyOrderKey].amount;
+
+            for(sellOrderKey = sell_head;
+                sellOrderKey.length != 0;
+                sellOrderKey = orders[sellOrderKey].status_next) {
+                
+                if (buyPrice >= sellPrice) {
+                    //buyer gets getCurrency, seller gets giveCurrency 
+                    //amount represents the amount of getCurrency to trade 
+                    //price represents the amount of giveCurrency per 1 getCurrency 
+
+
+                    if (buyAmount > sellAmount) { 
+                        buyAmount -= sellAmount; 
+                        sellAmount = 0;
+                    } else if (sellAmount > buyAmount) {
+                        sellAmount -= buyAmount;
+                        buyAmount = 0;
+                    } else if (sellAmount == buyAmount) {
+                        sellAmount = 0;
+                        buyAmount = 0;
+                    }
+
+                }
+            }
+
+        }
+        
 
     }
 
-    function insert(bytes32 orderKey, string giveCurr, string getCurr,
-                    string price, address account, string amount) public returns (bool) {
+    function insert(
+        address account,
+        bytes32 orderKey,
+        string giveCurr,
+        string getCurr,
+        string price,  
+        string amount
+    )
+        public returns (bool)
+    {
                         
         if(orderKey.length == 0) {
             return false; 
@@ -258,7 +292,9 @@ contract Exchange {
         return (length, sell_length, buy_length, cancelled_length, settled_length);
     }
 
-    function getEntry(bytes32 orderKey) public view returns (bytes32, string, bytes32, bytes32) {
+//No need for getter functions below since the mapping orders[] is accessible now
+ /* 
+    function getOrder(bytes32 orderKey) public view returns (bytes32, string, bytes32, bytes32) {
         if(orders[orderKey].orderKey.length == 0) 
             return;    
         
@@ -266,12 +302,12 @@ contract Exchange {
         return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].prev, orders[orderKey].next);
     }
     
-    function getStatusEntry(bytes32 orderKey) public view returns (bytes32, string, bytes32, bytes32) {
+    function getStatusOrder(bytes32 orderKey) public view returns (bytes32, string, string, bytes32, bytes32) {
         if(orders[orderKey].orderKey.length == 0) 
             return;    
         
         //key, value, prev, next, status_prev, status_next, status_prev, status_next
-        return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].status_prev, orders[orderKey].status_next);
+        return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].amount, orders[orderKey].status_prev, orders[orderKey].status_next);
     }
     
     function getSellHead() public view returns (bytes32, string, bytes32, bytes32) {
@@ -301,4 +337,5 @@ contract Exchange {
         
         return (orders[buy_tail].orderKey, orders[buy_tail].price, orders[buy_tail].status_prev, orders[buy_tail].status_next);
     }
+*/
 }
