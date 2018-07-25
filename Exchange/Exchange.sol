@@ -38,7 +38,8 @@ contract Exchange {
         bytes32 next;
         bytes32 status_prev; //in different list depending on status
         bytes32 status_next;
-        bool cancelled;
+        bool partially_filled; //if true, user cannot cancel the order
+        bool cancelled; //consider the race condition of cancel operation
         bool settled;
     }
 
@@ -79,8 +80,8 @@ contract Exchange {
         bytes32 orderkey,
         string giveCurrencyName, //give currency fund should be checked 
         string getCurrencyName, 
-        string price,
-        string amount
+        uint price,
+        uint amount
     ) 
         public 
     { 
@@ -90,13 +91,21 @@ contract Exchange {
         accountOrders[account].push(orderkey);
     }
     
-    function createMarketOrder(address account, bytes32 orderkey, string giveCurrencyName, string getCurrencyName, string amount) public {
-        string memory price = getMarketPrice(giveCurrencyName, getCurrencyName); 
+    function createMarketOrder(
+        address account,
+        bytes32 orderkey,
+        string giveCurrencyName,
+        string getCurrencyName, 
+        uint amount
+    ) 
+        public 
+    {
+        uint price = getMarketPrice(giveCurrencyName, getCurrencyName); 
         createLimitOrder(account, orderkey, giveCurrencyName, getCurrencyName, price, amount);
     }
 
-    function getMarketPrice(string giveCurrencyName, string getCurrencyName) public returns(string price) {
-        string memory marketPrice = "marketPrice";
+    function getMarketPrice(string giveCurrencyName, string getCurrencyName) public returns(uint marketPrice) {
+        uint marketPrice = 0;
         return  marketPrice;
     }
 
@@ -105,44 +114,79 @@ contract Exchange {
     }
 
     function settle() public {
+        /*
+        todo: move orders to appropriate lists 
+        */
         bytes32 buyOrderKey;
         bytes32 sellOrderKey;
+        bytes32 prevBuyOrderKey;
         uint buyPrice;
         uint sellPrice;
         uint buyAmount;
         uint sellAmount;
+        address buyAccount;
+        address sellAccount;
 
         for (buyOrderKey = buy_head;
             buyOrderKey.length != 0;
             buyOrderKey = orders[buyOrderKey].status_next) {
             
+            prevBuyOrderKey = orders[buyOrderKey].status_prev;
+            if (orders[prevBuyOrderKey].amount == 0) { //move the previous buy order to settled list if the order is completely filled up
+                remove(prevBuyOrderKey);
+                putSettle(prevBuyOrderKey);
+                orders[prevBuyOrderKey].settled = true; 
+            }
+
             buyPrice = orders[buyOrderKey].price;
             buyAmount = orders[buyOrderKey].amount;
+            buyAccount = orders[buyOrderKey].account;
 
             for(sellOrderKey = sell_head;
                 sellOrderKey.length != 0;
                 sellOrderKey = orders[sellOrderKey].status_next) {
                 
-                if (buyPrice >= sellPrice) {
-                    //buyer gets getCurrency, seller gets giveCurrency 
+                sellPrice = orders[sellOrderKey].price;
+                sellAmount = orders[sellOrderKey].amount;
+                sellAccount = orders[buyOrderKey].account;
+
+                if (buyPrice >= sellPrice) { //condition for successful trade to happen
                     //amount represents the amount of getCurrency to trade 
                     //price represents the amount of giveCurrency per 1 getCurrency 
 
-
-                    if (buyAmount > sellAmount) { 
-                        buyAmount -= sellAmount; 
+                    //if partially filled, partially filled flag gets marked true 
+                    //partially filled orders cannot be canceled. cancel order process must happen after ensuring that the partially processed is not 
+                    if (buyAmount > sellAmount) { //buyAmount partially filled
+                        deposit(buyAccount, "BitCoin", sellAmount); //change later to support multiple markes - bitcoin market, USD market, Ether Market, LTC Market 
+                        withdraw(buyAccount, "USD", sellAmount * buyPrice);
+                        deposit(sellAccount, "USD", sellAmount * buyPrice);
+                        withdraw(sellAccount, "BitCoin", sellAmount);
+                        buyAmount -= sellAmount; //potentially not changing data in the hash table 
                         sellAmount = 0;
-                    } else if (sellAmount > buyAmount) {
+                    } else if (sellAmount > buyAmount) { //sellAmount partially filled 
+                        deposit(buyAccount, "BitCoin", buyAmount);
+                        withdraw(buyAccount, "USD", buyAmount * buyPrice);
+                        deposit(sellAccount, "USD", buyAmount * buyPrice);
+                        withdraw(sellAccount, "BitCoin", buyAmount);
                         sellAmount -= buyAmount;
                         buyAmount = 0;
-                    } else if (sellAmount == buyAmount) {
+                    } else if (sellAmount == buyAmount) { //both buy and sell completely filled 
+                        deposit(buyAccount, "BitCoin", buyAmount);
+                        withdraw(buyAccount, "USD", buyAmount * buyPrice);
+                        deposit(sellAccount, "USD", buyAmount * buyPrice);
+                        withdraw(sellAccount, "BitCoin", buyAmount);
                         sellAmount = 0;
                         buyAmount = 0;
                     }
-
-                }
+                    if (buyAmount == 0) {  
+                        break;
+                    } else if (sellAmount == 0) {
+                        remove(sellOrderKey);
+                        putSettle(sellOrderKey);
+                        continue;
+                    }
+                }                
             }
-
         }
         
 
@@ -153,8 +197,8 @@ contract Exchange {
         bytes32 orderKey,
         string giveCurr,
         string getCurr,
-        string price,  
-        string amount
+        uint price,  
+        uint amount
     )
         public returns (bool)
     {
@@ -226,7 +270,7 @@ contract Exchange {
         length++;
     }
     
-    function cancel(bytes32 targetkey) public {
+    function cancel(bytes32 targetkey) public { //consider race condition
         
         //to make sure that a targetkey can only be cancelled from the buy/sell lists
         if(orders[targetkey].cancelled != true && orders[targetkey].settled != true)
@@ -247,6 +291,28 @@ contract Exchange {
         }
     }
 
+    function putSettle(bytes32 targetkey) public { //consider race condition
+        
+        //to make sure that a targetkey can only be cancelled from the buy/sell lists
+        if(orders[targetkey].cancelled != true && orders[targetkey].settled != true)
+        {
+            remove(targetkey);
+            if (settled_length == 0) {
+                settled_head = targetkey;
+                settled_tail = targetkey;
+                settled_length++;
+            } else {
+                orders[settled_tail].status_next = targetkey;
+                orders[targetkey].status_prev = settled_tail;
+                settled_tail = targetkey;
+                settled_length++; 
+            }
+            
+            orders[targetkey].partially_filled = false;
+            orders[targetkey].settled = true;
+        }
+    }
+
     function remove(bytes32 targetkey) public returns (bool) { //does not destroy the object, just takes it out of the buy and sell order list 
         if(orders[targetkey].orderKey.length == 0 || length == 0) {
             //if the key value is nonexistent or if list is empty
@@ -254,7 +320,8 @@ contract Exchange {
         }
         
         //for buy list
-        if(keccak256(bytes(orders[targetkey].giveCurrencyName)) == keccak256("USD")) {
+        if(keccak256(bytes(orders[targetkey].giveCurrencyName)) == keccak256("USD")) { 
+            //Question-why is bytes used on the left side and not on the right side?  
             if(targetkey == buy_head) {
                 buy_head = orders[buy_head].status_next;
                 orders[buy_head].status_prev = nil;
@@ -292,8 +359,8 @@ contract Exchange {
         return (length, sell_length, buy_length, cancelled_length, settled_length);
     }
 
-//No need for getter functions below since the mapping orders[] is accessible now
- /* 
+//functions below only to be used externally
+ 
     function getOrder(bytes32 orderKey) public view returns (bytes32, string, bytes32, bytes32) {
         if(orders[orderKey].orderKey.length == 0) 
             return;    
@@ -337,5 +404,5 @@ contract Exchange {
         
         return (orders[buy_tail].orderKey, orders[buy_tail].price, orders[buy_tail].status_prev, orders[buy_tail].status_next);
     }
-*/
+
 }
