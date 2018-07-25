@@ -113,8 +113,9 @@ contract Exchange {
     function getMarketPrice(string giveCurrencyName, string getCurrencyName) public returns(uint marketPrice) {
         marketPrice = 0;
         return marketPrice;
+        
+        //highest buy lowest sell average
     }
-    
     */
     
 
@@ -409,6 +410,17 @@ contract Exchange {
             return;    
         
         return (orders[buy_tail].orderKey, orders[buy_tail].price, orders[buy_tail].status_prev, orders[buy_tail].status_next);
+    }
+    
+    function testPopulate() public {
+        //buy
+        createLimitOrder(0x1, 0x1, "USD", "BitCoin", 8000, 1);
+        createLimitOrder(0x2, 0x2, "USD", "BitCoin", 8000, 2);
+        createLimitOrder(0x3, 0x3, "USD", "BitCoin", 8000, 3);
+        //sell
+        createLimitOrder(0x7, 0x7, "BitCoin", "USD", 8000, 1);
+        createLimitOrder(0x8, 0x8, "BitCoin", "USD", 8000, 1);
+        createLimitOrder(0x9, 0x9, "BitCoin", "USD", 8000, 1);
     }
 
 }
