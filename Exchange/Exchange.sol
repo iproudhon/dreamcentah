@@ -60,14 +60,14 @@ contract Exchange {
     bytes32 public tail;
     bytes32 constant nil = "";
 
-    mapping(string => mapping(address=>uint)) public balance;
-    mapping(bytes32=>order) private orders; //mapping of orderkeys to order objects
-    mapping (address => bytes32[]) public accountOrders; //mapping of account address to orderKeys
-    mapping (string => address) public currencies; //mapping of token name to token address 
+    mapping(string => mapping(address=>uint256)) balance;
+    mapping(bytes32=>order) orders; //mapping of orderkeys to order objects
+    mapping (address => bytes32[]) accountOrders; //mapping of account address to orderKeys
+    mapping (string => address) currencies; //mapping of token name to token address 
 
     function deposit(address account, string currencyName, uint amount)  public {
         if (amount > 0)
-            balance[currencyName][account] += amount; 
+            balance[currencyName][account] += amount;  
     }
 
     function withdraw(address account, string currencyName, uint amount) public {
@@ -91,6 +91,7 @@ contract Exchange {
         accountOrders[account].push(orderkey);
     }
     
+    /*
     function createMarketOrder(
         address account,
         bytes32 orderkey,
@@ -108,19 +109,19 @@ contract Exchange {
         createLimitOrder(account, orderkey, giveCurrencyName, getCurrencyName, price, amount);
     }
 
+    //implement after sorted
     function getMarketPrice(string giveCurrencyName, string getCurrencyName) public returns(uint marketPrice) {
-        uint marketPrice = 0;
-        return  marketPrice;
+        marketPrice = 0;
+        return marketPrice;
     }
-
-    function cancelOrder(bytes32 targetOrderKey) public {
-        cancel(targetOrderKey); 
-    }
+    
+    */
+    
 
     function settle() public {
-        /*
-        todo: move orders to appropriate lists 
-        */
+        
+        //todo: move orders to appropriate lists 
+
         bytes32 buyOrderKey;
         bytes32 sellOrderKey;
         bytes32 prevBuyOrderKey;
@@ -366,7 +367,7 @@ contract Exchange {
 
 //functions below only to be used externally
  
-    function getOrder(bytes32 orderKey) public view returns (bytes32, string, bytes32, bytes32) {
+    function getOrder(bytes32 orderKey) public view returns (bytes32, uint256, bytes32, bytes32) {
         if(orders[orderKey].orderKey.length == 0) 
             return;    
         
@@ -374,7 +375,7 @@ contract Exchange {
         return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].prev, orders[orderKey].next);
     }
     
-    function getStatusOrder(bytes32 orderKey) public view returns (bytes32, string, string, bytes32, bytes32) {
+    function getStatusOrder(bytes32 orderKey) public view returns (bytes32, uint256, uint256, bytes32, bytes32) {
         if(orders[orderKey].orderKey.length == 0) 
             return;    
         
@@ -382,28 +383,28 @@ contract Exchange {
         return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].amount, orders[orderKey].status_prev, orders[orderKey].status_next);
     }
     
-    function getSellHead() public view returns (bytes32, string, bytes32, bytes32) {
+    function getSellHead() public view returns (bytes32, uint256, bytes32, bytes32) {
         if(sell_head.length == 0)
             return;    
         
         return (orders[sell_head].orderKey, orders[sell_head].price, orders[sell_head].status_prev, orders[sell_head].status_next);
     }
     
-    function getSellTail() public view returns (bytes32, string, bytes32, bytes32) {
+    function getSellTail() public view returns (bytes32, uint256, bytes32, bytes32) {
         if(sell_tail.length == 0)
             return;    
         
         return (orders[sell_tail].orderKey, orders[sell_tail].price, orders[sell_tail].status_prev, orders[sell_tail].status_next);
     }
     
-    function getBuyHead() public view returns (bytes32, string, bytes32, bytes32) {
+    function getBuyHead() public view returns (bytes32, uint256, bytes32, bytes32) {
         if(buy_head.length == 0) 
             return;    
         
         return (orders[buy_head].orderKey, orders[buy_head].price, orders[buy_head].status_prev, orders[buy_head].status_next);
     }
     
-    function getBuyTail() public view returns (bytes32, string, bytes32, bytes32) {
+    function getBuyTail() public view returns (bytes32, uint256, bytes32, bytes32) {
         if(buy_tail.length == 0)
             return;    
         
