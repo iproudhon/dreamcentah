@@ -109,18 +109,11 @@ contract Exchange {
     }
 
     function getMarketPrice(string giveCurrencyName, string getCurrencyName) public returns(uint marketPrice) {
-        uint marketPrice = 0;
+        marketPrice = 0;
         return  marketPrice;
     }
 
-    function cancelOrder(bytes32 targetOrderKey) public {
-        cancel(targetOrderKey); 
-    }
-
     function settle() public {
-        /*
-        todo: move orders to appropriate lists 
-        */
         bytes32 buyOrderKey;
         bytes32 sellOrderKey;
         bytes32 prevBuyOrderKey;
