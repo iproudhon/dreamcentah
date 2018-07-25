@@ -98,8 +98,12 @@ contract Exchange {
         string getCurrencyName, 
         uint amount
     ) 
-        public 
+        public returns (bool)
     {
+        if (balance[giveCurrencyName][account] < amount) {
+            return false;
+        }
+        
         uint price = getMarketPrice(giveCurrencyName, getCurrencyName); 
         createLimitOrder(account, orderkey, giveCurrencyName, getCurrencyName, price, amount);
     }
@@ -133,9 +137,7 @@ contract Exchange {
             
             prevBuyOrderKey = orders[buyOrderKey].status_prev;
             if (orders[prevBuyOrderKey].amount == 0) { //move the previous buy order to settled list if the order is completely filled up
-                remove(prevBuyOrderKey);
                 putSettle(prevBuyOrderKey);
-                orders[prevBuyOrderKey].settled = true; 
             }
 
             buyPrice = orders[buyOrderKey].price;
@@ -163,6 +165,7 @@ contract Exchange {
                         withdraw(sellAccount, "BitCoin", sellAmount);
                         buyAmount -= sellAmount; //potentially not changing data in the hash table 
                         sellAmount = 0;
+                        orders[buyOrderKey].partially_filled = true;
                     } else if (sellAmount > buyAmount) { //sellAmount partially filled 
                         deposit(buyAccount, "BitCoin", buyAmount);
                         withdraw(buyAccount, "USD", buyAmount * buyPrice);
@@ -170,6 +173,7 @@ contract Exchange {
                         withdraw(sellAccount, "BitCoin", buyAmount);
                         sellAmount -= buyAmount;
                         buyAmount = 0;
+                        orders[sellOrderKey].partially_filled = true;
                     } else if (sellAmount == buyAmount) { //both buy and sell completely filled 
                         deposit(buyAccount, "BitCoin", buyAmount);
                         withdraw(buyAccount, "USD", buyAmount * buyPrice);
@@ -273,7 +277,8 @@ contract Exchange {
     function cancel(bytes32 targetkey) public { //consider race condition
         
         //to make sure that a targetkey can only be cancelled from the buy/sell lists
-        if(orders[targetkey].cancelled != true && orders[targetkey].settled != true)
+        if(orders[targetkey].cancelled != true && orders[targetkey].settled != true 
+          && orders[targetkey].partially_filled == false)
         {
             remove(targetkey);
             if (cancelled_length == 0) {
