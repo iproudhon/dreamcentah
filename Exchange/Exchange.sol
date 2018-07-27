@@ -1,31 +1,5 @@
 pragma solidity ^0.4.9;
 
-contract Currency {
-    string public name; 
-    uint256 public totalSupply; 
-    mapping(address => uint256) balances; //user address to balances 
-
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
-    /// @param account The address from which the balance will be retrieved
-    /// @return The balance
-    function getBalance(address account) public view returns(uint256 balance) {
-        return balances[account];
-    }
-
-    /// @param to the address to which the token will be transferred 
-    /// @param value the amount of token to be transferred 
-    /// @return whether the transfer was successful 
-    function transfer(address to, uint256 value) public returns (bool success) {
-        if (balances[msg.sender] >= value && balances[to] + value > balances[to]) {
-            balances[msg.sender] -= value;
-            balances[to] += value;
-            emit Transfer(msg.sender, to, value);
-            return true;
-        } else {return false;}
-    }
-}
-
 contract Exchange {    
     struct order {
         address account;
@@ -79,7 +53,7 @@ contract Exchange {
         return balance[currencyName][account];
     }
 
-    function getOrderkey(uint nonce) public returns(bytes32 key) {
+    function getOrderkey(uint nonce) public pure returns(bytes32 key) {
         key = keccak256(abi.encodePacked(nonce));
     }
 
@@ -116,19 +90,20 @@ contract Exchange {
         uint price = getMarketPrice(); 
         createLimitOrder(account, orderkey, giveCurrencyName, getCurrencyName, price, amount);
     }
-
-    //implement after sorted
+    
+    /*
+    //implement after supporting multiple markets 
     function getMarketPrice(string giveCurrencyName, string getCurrencyName) public returns(uint marketPrice) {
         marketPrice = 0;
         return marketPrice;
     }
+    */
 
     function getMarketPrice() public view returns(uint marketPrice) {
         //highest buy lowest sell average
         marketPrice = (orders[buy_tail].price + orders[sell_head].price)/2;
         return marketPrice;
     }
-    
 
     function settle() public {
         bytes32 buyOrderKey;
@@ -493,10 +468,6 @@ contract Exchange {
             return;    
         
         return (orders[buy_tail].orderKey, orders[buy_tail].price, orders[buy_tail].status_prev, orders[buy_tail].status_next);
-    }
-    
-    function getOrderKey() public returns(bytes32 orderKey) {
-
     }
 
     function testPopulate() public {
