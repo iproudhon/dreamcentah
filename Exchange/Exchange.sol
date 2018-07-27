@@ -79,6 +79,10 @@ contract Exchange {
         return balance[currencyName][account];
     }
 
+    function getOrderkey(uint nonce) public returns(bytes32 key) {
+        key = keccak256(abi.encodePacked(nonce));
+    }
+
     function createLimitOrder(
         address account, 
         bytes32 orderkey,
