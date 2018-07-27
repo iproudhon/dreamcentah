@@ -32,7 +32,7 @@ function showBalance() {
 }
 
 function testOrders() {
-  showbalance();
+  showBalance();
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 1);
   mine();
