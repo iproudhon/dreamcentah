@@ -75,6 +75,10 @@ contract Exchange {
             balance[currencyName][account] -= amount;  
     }
 
+    function getBalance(address account, string currencyName) public view returns(uint) {
+        return balance[currencyName][account];
+    }
+
     function createLimitOrder(
         address account, 
         bytes32 orderkey,
@@ -91,7 +95,7 @@ contract Exchange {
         accountOrders[account].push(orderkey);
     }
     
-    /*
+    
     function createMarketOrder(
         address account,
         bytes32 orderkey,
@@ -105,31 +109,24 @@ contract Exchange {
             return false;
         }
         
-        uint price = getMarketPrice(giveCurrencyName, getCurrencyName); 
+        uint price = getMarketPrice(); 
         createLimitOrder(account, orderkey, giveCurrencyName, getCurrencyName, price, amount);
     }
 
     //implement after sorted
     function getMarketPrice(string giveCurrencyName, string getCurrencyName) public returns(uint marketPrice) {
         marketPrice = 0;
-<<<<<<< HEAD
-        return  marketPrice;
+        return marketPrice;
     }
 
-    function settle() public {
-=======
-        return marketPrice;
-        
+    function getMarketPrice() public view returns(uint marketPrice) {
         //highest buy lowest sell average
+        marketPrice = (orders[buy_tail].price + orders[sell_head].price)/2;
+        return marketPrice;
     }
-    */
     
 
     function settle() public {
-        
-        //todo: move orders to appropriate lists 
-
->>>>>>> db3a6fe9126a04c56615a6360cf3a6e21b65057b
         bytes32 buyOrderKey;
         bytes32 sellOrderKey;
         bytes32 prevBuyOrderKey;
@@ -201,8 +198,6 @@ contract Exchange {
                 }                
             }
         }
-        
-
     }
 
     function insert(
@@ -213,7 +208,7 @@ contract Exchange {
         uint price,  
         uint amount
     )
-        public returns (bool)
+    public returns (bool)
     {
                         
         if(orderKey.length == 0) {
@@ -249,17 +244,45 @@ contract Exchange {
             return true; 
         }
         
+        bytes32 previndex;
+        bytes32 nextindex;
+        
         //cannot just put in previous if statement as it can't set the head that is not the first
         if(keccak256(bytes(giveCurr)) == keccak256("USD") && buy_length == 0) {
             buy_head = orderKey; 
             buy_tail = orderKey; 
             buy_length++;
         }
+        
         //regular case where sell_length > 0
         else if(keccak256(bytes(giveCurr)) == keccak256("USD")) { 
-            orders[orderKey].status_prev = buy_tail; 
-            orders[buy_tail].status_next = orderKey; 
-            buy_tail = orderKey; 
+            bytes32 targetbuy = getTargetKey(price, 0);
+            if(targetbuy == "") {
+                //if it is "" belongs at end
+                previndex = buy_tail;
+                orders[orderKey].status_prev = previndex;
+                orders[buy_tail].status_next = orderKey;
+                buy_tail = orderKey;
+            }
+            
+            else if(targetbuy == buy_head) {
+                
+                //if belongs at front
+                nextindex = buy_head;
+                orders[orderKey].status_next = nextindex;
+                orders[buy_head].status_prev = orderKey;
+                buy_head = orderKey;
+            }
+            
+            else {
+                previndex = orders[targetbuy].status_prev;
+                nextindex = targetbuy;
+                orders[orderKey].status_next = nextindex;
+                orders[orderKey].status_prev = previndex;
+                orders[previndex].status_next = orderKey;
+                orders[nextindex].status_prev = orderKey;
+            }
+        
             buy_length++;
         }
         
@@ -268,19 +291,68 @@ contract Exchange {
             sell_tail = orderKey; 
             sell_length++;
         }
+        
         //regular case where sell_length > 0
-        else if(keccak256(bytes(giveCurr)) == keccak256("BitCoin")) { // if it is s sell at the start of string
-            orders[orderKey].status_prev = sell_tail; 
-            orders[sell_tail].status_next = orderKey; 
-            sell_tail = orderKey; 
+        else if(keccak256(bytes(giveCurr)) == keccak256("BitCoin")) {
+            bytes32 target = getTargetKey(price, 1);
+            if(target == "") {
+                //if belongs at end 
+                previndex = sell_tail;
+                orders[orderKey].status_prev = previndex;
+                orders[sell_tail].status_next = orderKey;
+                sell_tail = orderKey;
+            }
+            
+            else if(target == sell_head) {
+                //if belongs at front
+                nextindex = sell_head;
+                orders[orderKey].status_next = nextindex;
+                orders[sell_head].status_prev = orderKey;
+                sell_head = orderKey;
+            }
+            
+            else {
+                previndex = orders[target].status_prev;
+                nextindex = target;
+                orders[orderKey].status_next = nextindex;
+                orders[orderKey].status_prev = previndex;
+                orders[previndex].status_next = orderKey;
+                orders[nextindex].status_prev = orderKey;
+            }
+
             sell_length++;
         }
         
         //by default push_back to end of order list 
         orders[tail].next = orderKey;
+        orders[orderKey].prev = tail;
         tail = orderKey;
 
         length++;
+    }
+    
+    function getTargetKey(uint256 price, int giveCurrency) public view returns (bytes32) 
+    {
+        //returns index after it, nil if at end
+        //giveCurrency is 0 if USD, 1 if BitCoin, ... etc
+        
+        bytes32 targetkey;
+        
+        if(giveCurrency == 0) { //for buy
+            targetkey = buy_head;
+            while(targetkey != "" && price >= orders[targetkey].price) {
+                targetkey = orders[targetkey].status_next;
+            }
+        }
+        
+        else if(giveCurrency == 1) { //for sell
+            targetkey = sell_head;
+            while(targetkey != "" && price > orders[targetkey].price) {
+                targetkey = orders[targetkey].status_next;
+            }
+        }
+        
+        return targetkey;
     }
     
     function cancel(bytes32 targetkey) public { //consider race condition
@@ -419,15 +491,19 @@ contract Exchange {
         return (orders[buy_tail].orderKey, orders[buy_tail].price, orders[buy_tail].status_prev, orders[buy_tail].status_next);
     }
     
+    function getOrderKey() public returns(bytes32 orderKey) {
+
+    }
+
     function testPopulate() public {
         //buy
-        createLimitOrder(0x1, 0x1, "USD", "BitCoin", 8000, 1);
-        createLimitOrder(0x2, 0x2, "USD", "BitCoin", 8000, 2);
+        createLimitOrder(0x1, 0x1, "USD", "BitCoin", 1000, 1);
+        createLimitOrder(0x2, 0x2, "USD", "BitCoin", 2000, 2);
         createLimitOrder(0x3, 0x3, "USD", "BitCoin", 8000, 3);
         //sell
-        createLimitOrder(0x7, 0x7, "BitCoin", "USD", 8000, 1);
-        createLimitOrder(0x8, 0x8, "BitCoin", "USD", 8000, 1);
-        createLimitOrder(0x9, 0x9, "BitCoin", "USD", 8000, 1);
+        createLimitOrder(0x7, 0x7, "BitCoin", "USD", 9000, 1);
+        createLimitOrder(0x8, 0x8, "BitCoin", "USD", 7000, 1);
+        createLimitOrder(0x9, 0x9, "BitCoin", "USD", 6000, 1);
     }
 
 }
