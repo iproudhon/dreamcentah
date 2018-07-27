@@ -42,8 +42,8 @@ function testOrders() {
 }
 
 function createLimitOrder(account, giveCurrency, getCurrency, price, amount) {
-  var orderkey = Exchange.getOrderKey(nonce);
-  Exchange.createlimitOrder(account, orderKey, giveCurrency, getCurrency, price, amount, {from:eth.accounts[0], gas:100000});
+  var orderkey = Exchange.getOrderkey(nonce);
+  Exchange.createLimitOrder(account, orderkey, giveCurrency, getCurrency, price, amount, {from:eth.accounts[0], gas:100000});
   nonce++;
 }
 
