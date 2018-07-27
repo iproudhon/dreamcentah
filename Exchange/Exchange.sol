@@ -423,7 +423,7 @@ contract Exchange {
     function sizes() public view returns (uint, uint, uint, uint, uint) {
         return (length, sell_length, buy_length, cancelled_length, settled_length);
     }
-
+/*
 //functions below only to be used externally
  
     function getOrder(bytes32 orderKey) public view returns (bytes32, uint256, bytes32, bytes32) {
@@ -469,16 +469,5 @@ contract Exchange {
         
         return (orders[buy_tail].orderKey, orders[buy_tail].price, orders[buy_tail].status_prev, orders[buy_tail].status_next);
     }
-
-    function testPopulate() public {
-        //buy
-        createLimitOrder(0x1, 0x1, "USD", "BitCoin", 1000, 1);
-        createLimitOrder(0x2, 0x2, "USD", "BitCoin", 2000, 2);
-        createLimitOrder(0x3, 0x3, "USD", "BitCoin", 8000, 3);
-        //sell
-        createLimitOrder(0x7, 0x7, "BitCoin", "USD", 9000, 1);
-        createLimitOrder(0x8, 0x8, "BitCoin", "USD", 7000, 1);
-        createLimitOrder(0x9, 0x9, "BitCoin", "USD", 6000, 1);
-    }
-
+    */
 }
