@@ -108,7 +108,7 @@ contract Exchange {
         return marketPrice;
     }
 
-    function settle() public {
+    function settle() public returns(bool) {
         bytes32 buyOrderKey;
         bytes32 sellOrderKey;
         bytes32 prevBuyOrderKey;
@@ -180,6 +180,7 @@ contract Exchange {
                 }                
             }
         }
+        return true;
     }
 
     function insert(
