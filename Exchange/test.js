@@ -1,5 +1,3 @@
-var nonce = 1;
-
 function initiateAccounts() {
   Exchange.deposit(eth.accounts[0], 'USD', 10000, {from:eth.accounts[0], gas:1000000});
   Exchange.deposit(eth.accounts[1], 'USD', 10000, {from:eth.accounts[0], gas:1000000});

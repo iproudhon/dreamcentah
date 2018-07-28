@@ -22,6 +22,7 @@ contract Exchange {
     uint public buy_length = 0;
     uint public cancelled_length = 0;
     uint public settled_length = 0;
+    uint public nonce = 1; 
     bytes32 public sell_head;
     bytes32 public sell_tail;
     bytes32 public buy_head;
@@ -53,8 +54,10 @@ contract Exchange {
         return balance[currencyName][account];
     }
 
-    function getOrderkey(uint nonce) public pure returns(bytes32 key) {
+    function getOrderkey() public returns(bytes32 key) {
         key = keccak256(abi.encodePacked(nonce));
+        nonce++;
+        return key;
     }
 
     function createLimitOrder(
