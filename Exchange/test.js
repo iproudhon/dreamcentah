@@ -1,14 +1,13 @@
-var nonce = 1;
 
 function initiateAccounts() {
-  Exchange.deposit(eth.accounts[0], 'USD', 10000, {from:eth.accounts[0], gas:100000});
-  Exchange.deposit(eth.accounts[1], 'USD', 10000, {from:eth.accounts[0], gas:100000});
-  Exchange.deposit(eth.accounts[2], 'USD', 10000, {from:eth.accounts[0], gas:100000});
-  Exchange.deposit(eth.accounts[3], 'USD', 10000, {from:eth.accounts[0], gas:100000});
-  Exchange.deposit(eth.accounts[0], 'BitCoin', 10000, {from:eth.accounts[0], gas:100000});
-  Exchange.deposit(eth.accounts[1], 'BitCoin', 10000, {from:eth.accounts[0], gas:100000});
-  Exchange.deposit(eth.accounts[2], 'BitCoin', 10000, {from:eth.accounts[0], gas:100000});
-  Exchange.deposit(eth.accounts[3], 'BitCoin', 10000, {from:eth.accounts[0], gas:100000});
+  Exchange.deposit(eth.accounts[0], 'USD', 10000, {from:eth.accounts[0], gas:1000000});
+  Exchange.deposit(eth.accounts[1], 'USD', 10000, {from:eth.accounts[0], gas:1000000});
+  Exchange.deposit(eth.accounts[2], 'USD', 10000, {from:eth.accounts[0], gas:1000000});
+  Exchange.deposit(eth.accounts[3], 'USD', 10000, {from:eth.accounts[0], gas:1000000});
+  Exchange.deposit(eth.accounts[0], 'BitCoin', 10000, {from:eth.accounts[0], gas:1000000});
+  Exchange.deposit(eth.accounts[1], 'BitCoin', 10000, {from:eth.accounts[0], gas:1000000});
+  Exchange.deposit(eth.accounts[2], 'BitCoin', 10000, {from:eth.accounts[0], gas:1000000});
+  Exchange.deposit(eth.accounts[3], 'BitCoin', 10000, {from:eth.accounts[0], gas:1000000});
   mine();
   showBalance();
 }
@@ -36,15 +35,15 @@ function testOrders() {
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 1);
   mine();
-  Exchange.settle({from:eth.accounts[0], gas:100000});
+  Exchange.settle({from:eth.accounts[0], gas:10000000});
   mine();
+  console.log('after settling');
   showBalance();
 }
 
 function createLimitOrder(account, giveCurrency, getCurrency, price, amount) {
-  var orderkey = Exchange.getOrderkey(nonce);
-  Exchange.createLimitOrder(account, orderkey, giveCurrency, getCurrency, price, amount, {from:eth.accounts[0], gas:100000});
-  nonce++;
+ var orderkey = Exchange.getOrderkey({from:eth.accounts[0], gas:1000000});
+  Exchange.createLimitOrder(account, orderkey, giveCurrency, getCurrency, price, amount, {from:eth.accounts[0], gas:1000000});
 }
 
 
