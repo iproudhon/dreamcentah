@@ -1,12 +1,12 @@
 function initiateAccounts() {
-  Exchange.deposit(eth.accounts[0], 'USD', 10000, {from:eth.accounts[0], gas:50000});
-  Exchange.deposit(eth.accounts[1], 'USD', 10000, {from:eth.accounts[0], gas:50000});
-  Exchange.deposit(eth.accounts[2], 'USD', 10000, {from:eth.accounts[0], gas:50000});
-  Exchange.deposit(eth.accounts[3], 'USD', 10000, {from:eth.accounts[0], gas:50000});
-  Exchange.deposit(eth.accounts[0], 'BitCoin', 10000, {from:eth.accounts[0], gas:50000});
-  Exchange.deposit(eth.accounts[1], 'BitCoin', 10000, {from:eth.accounts[0], gas:50000});
-  Exchange.deposit(eth.accounts[2], 'BitCoin', 10000, {from:eth.accounts[0], gas:50000});
-  Exchange.deposit(eth.accounts[3], 'BitCoin', 10000, {from:eth.accounts[0], gas:50000});
+  deposit(eth.accounts[0], 'USD', 10000);
+  deposit(eth.accounts[1], 'USD', 10000);
+  deposit(eth.accounts[2], 'USD', 10000);
+  deposit(eth.accounts[3], 'USD', 10000);
+  deposit(eth.accounts[0], 'BitCoin', 10000);
+  deposit(eth.accounts[1], 'BitCoin', 10000);
+  deposit(eth.accounts[2], 'BitCoin', 10000);
+  deposit(eth.accounts[3], 'BitCoin', 10000);
   mine();
   showBalance();
 }
@@ -62,74 +62,76 @@ function settle() {
   buyPrice = Exchange.getPrice(buyOrderKey);
   sellPrice = Exchange.getPrice(sellOrderKey);
 
-  if (buyPrice >= sellPrice) { //condition for any settle function to happen
-    while (buyPrice >= sellPrice) {
+  while (buyPrice >= sellPrice && Exchange.sizes()[1] > 0 && Exchange.sizes()[2] > 0) { //buy Length and sell length both greater than 0
 
-      buyAmount = Exchange.getAmount(buyOrderKey);
-      buyAccount = Exchange.getAccount(buyOrderKey);
+    buyAmount = Exchange.getAmount(buyOrderKey);
+    buyAccount = Exchange.getAccount(buyOrderKey);
 
-      sellAmount = Exchange.getAmount(sellOrderKey);
-      sellAccount = Exchange.getAccount(sellOrderKey);
+    sellAmount = Exchange.getAmount(sellOrderKey);
+    sellAccount = Exchange.getAccount(sellOrderKey);
 
-      if (buyAmount > sellAmount) {
-        deposit(buyAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000}); 
-        withdraw(buyAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        deposit(sellAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        withdraw(sellAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000});
-        
-        Exchange.setAmount(buyOrder, buyAmount - sellAmount, {from:eth.accounts[0], gas:50000});
-        Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
-        Exchange.partiallyFilled(buyOrderKey, {from:eth.accounts[0], gas:50000});
+    if (buyAmount > sellAmount) {
+      deposit(buyAccount, "BitCoin", sellAmount); 
+      withdraw(buyAccount, "USD", sellAmount * buyPrice);
+      deposit(sellAccount, "USD", sellAmount * buyPrice);
+      withdraw(sellAccount, "BitCoin", sellAmount, );
+      
+      Exchange.setAmount(buyOrder, buyAmount - sellAmount, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.partiallyFilled(buyOrderKey, {from:eth.accounts[0], gas:50000});
 
-        nextSellOrderKey = Exchange.getNextKey(sellOrderKey);
-        Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:50000});
-        sellOrderKey = nextSellOrderKey;
-        sellPrice = Exchange.getPrice(sellOrderKey);
+      nextSellOrderKey = Exchange.getNextKey(sellOrderKey);
+      Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:50000});
 
-        mine();
-        settledOrderCount += 1; 
+      sellOrderKey = nextSellOrderKey;
+      sellPrice = Exchange.getPrice(sellOrderKey);
 
-      } else if (sellAmount > buyAmount) { 
-        deposit(buyAccount, "BitCoin", buyAmount, {from:eth.accounts[0], gas:50000}); 
-        withdraw(buyAccount, "USD", buyAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        deposit(sellAccount, "USD", buyAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        withdraw(sellAccount, "BitCoin", buyAmount, {from:eth.accounts[0], gas:50000});
-        
-        Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
-        Exchange.setAmount(sellOrder, sellAmount - buyAmount, {from:eth.accounts[0], gas:50000});
-        Exchange.partiallyFilled(sellOrderKey, {from:eth.accounts[0], gas:50000});
-        
-        prevBuyOrderKey = Exchange.getPrevKey(buyOrderKey);
-        Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:50000});
-        buyOrderKey = prevBuyOrderKey;
-        sellOrderKey = nextSellOrderKey;
-        buyPrice = Exchange.getPrice(buyOrderKey);
+      mine();
+      settledOrderCount += 1; 
+      console.log('1 order settled');
 
-        mine();
-        settledOrderCount += 1;
+    } else if (sellAmount > buyAmount) { 
+      deposit(buyAccount, "BitCoin", buyAmount); 
+      withdraw(buyAccount, "USD", buyAmount * buyPrice);
+      deposit(sellAccount, "USD", buyAmount * buyPrice);
+      withdraw(sellAccount, "BitCoin", buyAmount);
+      
+      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(sellOrder, sellAmount - buyAmount, {from:eth.accounts[0], gas:50000});
+      Exchange.partiallyFilled(sellOrderKey, {from:eth.accounts[0], gas:50000});
+      
+      prevBuyOrderKey = Exchange.getPrevKey(buyOrderKey);
+      Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:50000});
+      buyOrderKey = prevBuyOrderKey;
+      sellOrderKey = nextSellOrderKey;
+      buyPrice = Exchange.getPrice(buyOrderKey);
 
-      } else if (sellAmount == buyAmount) {
-        deposit(buyAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000}); 
-        withdraw(buyAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        deposit(sellAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        withdraw(sellAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000});
-        
-        Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
-        Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
-        
-        prevBuyOrderKey = Exchange.getPrevKey(buyOrderKey);
-        nextSellOrderKey = Exchange.getNextKey(sellOrderKey);
-        Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:50000});
-        Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:50000});
-        buyOrderKey = prevBuyOrderKey; 
-        sellOrderKey = nextSellOrderKey;
-        buyPrice = Exchange.getPrice(buyOrderKey);
-        sellPrice = Exchange.getPrice(sellOrderKey);
-        
-        mine();
-        settledOrderCount += 2; 
-        break;
-      }
+      mine();
+      settledOrderCount += 1;
+      console.log('1 order settled');
+
+    } else if (sellAmount == buyAmount) {
+      deposit(buyAccount, "BitCoin", sellAmount, ); 
+      withdraw(buyAccount, "USD", sellAmount * buyPrice);
+      deposit(sellAccount, "USD", sellAmount * buyPrice);
+      withdraw(sellAccount, "BitCoin", sellAmount);
+      
+      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
+      
+      prevBuyOrderKey = Exchange.getPrevKey(buyOrderKey);
+      nextSellOrderKey = Exchange.getNextKey(sellOrderKey);
+      Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:50000});
+      Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:50000});
+      buyOrderKey = prevBuyOrderKey; 
+      sellOrderKey = nextSellOrderKey;
+      buyPrice = Exchange.getPrice(buyOrderKey);
+      sellPrice = Exchange.getPrice(sellOrderKey);
+      
+      mine();
+      settledOrderCount += 2;
+      console.log('2 orders settled');
+      break;
     }
     console.log('Settled orders: ' + settledOrderCount);
   }
