@@ -34,6 +34,86 @@ function testOrders1() {
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 1);
   mine();
+  var buyOrder = Exchange.buy_tail();
+  var sellOrder = Exchange.sell_head();
+}
+
+
+n testOrders2() {
+  showBalance();
+  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1200, 1);
+  createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 900, 1);  
+  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 300, 1);
+  mine();
+  settle();
+  console.log('after settling');
+  showBalance();
+}
+
+function testOrders3() {
+  showBalance();
+  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 900, 1);
+  createLimitOrder(eth.accounts[1], 'USD', 'BitCoin', 300, 1);
+  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1200, 1);
+  mine();
+  settle();
+  console.log('after settling');
+  showBalance();
+}
+
+function testOrders4() {
+  showBalance();
+  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
+  createLimitOrder(eth.accounts[1], 'USD', 'BitCoin', 2000, 1);
+  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 5000, 1);
+  mine();
+  settle();
+  console.log('after settling');
+  showBalance();
+}
+
+function testOrders5() {
+  showBalance();
+  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 5000, 1);
+  createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 2);
+  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 1);
+  mine();
+  settle();
+  console.log('after settling');
+  showBalance();
+}
+
+function testOrders6() {
+  showBalance();
+  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 5000, 1);
+  createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 0, 1);
+  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 2);
+  mine();
+  settle();
+  console.log('after settling');
+  showBalance();
+}
+
+function testOrders7() {
+  showBalance();
+  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 0, 1);
+  createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 100, 1);
+  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 2);
+  mine();
+  settle();
+  console.log('after settling');
+  showBalance();
+}
+
+function testOrders8() {
+  showBalance();
+  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 0, 1);
+  createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 100, 1);
+  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 2);
+  mine();
+  settle();
+  console.log('after settling');
+  showBalance();
 }
 
 function createLimitOrder(account, giveCurrency, getCurrency, price, amount) {
@@ -73,8 +153,8 @@ function settle() {
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
       
-      Exchange.setAmount(buyOrderKey, buyAmount - sellAmount, {from:eth.accounts[0], gas:50000});
-      Exchange.setAmount(sellOrderKey, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(buyOrder, buyAmount - sellAmount, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
       Exchange.partiallyFilled(buyOrderKey, {from:eth.accounts[0], gas:50000});
 
       nextSellOrderKey = Exchange.getNext(sellOrderKey);
@@ -93,8 +173,8 @@ function settle() {
       deposit(sellAccount, "USD", buyAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", buyAmount);
       
-      Exchange.setAmount(buyOrderKey, 0, {from:eth.accounts[0], gas:50000});
-      Exchange.setAmount(sellOrderKey, sellAmount - buyAmount, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(sellOrder, sellAmount - buyAmount, {from:eth.accounts[0], gas:50000});
       Exchange.partiallyFilled(sellOrderKey, {from:eth.accounts[0], gas:50000});
       
       prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
@@ -113,8 +193,8 @@ function settle() {
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
       
-      Exchange.setAmount(buyOrderKey, 0, {from:eth.accounts[0], gas:50000});
-      Exchange.setAmount(sellOrderKey, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
       
       prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
       nextSellOrderKey = Exchange.getNext(sellOrderKey);
