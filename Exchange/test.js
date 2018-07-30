@@ -34,8 +34,7 @@ function testOrders() {
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 1);
   mine();
-  Exchange.settle({from:eth.accounts[0], gas:2100000});
-  mine();
+  settle();
   console.log('after settling');
   showBalance();
 }
@@ -46,6 +45,8 @@ function createLimitOrder(account, giveCurrency, getCurrency, price, amount) {
 }
 
 function settle() {
+  var transactionCount = 0;
+  var settledOrderCount = 0; 
   var buyOrderKey;
   var sellOrderKey;
   var prevBuyorderKey;
@@ -65,10 +66,14 @@ function settle() {
   if (buyPrice >= sellPrice) { //condition for any settle function to happen
     while (buyPrice >= sellPrice) {
       
+      if (transactionCount >= 16) {
+        mine();
+        transactionCount = 0; 
+      }
+
       buyAmount = getAmount(buyOrderKey);
       buyAccount = getAccount(buyOrderKey);
 
-      
       sellAmount = getAmount(sellOrderKey);
       sellAccount = getAccount(sellOrderKey);
 
@@ -85,7 +90,9 @@ function settle() {
         Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:100000});
         sellOrderKey = nextSellOrderKey;
         sellPrice = getPrice(sellOrderKey);
-
+        
+        transactionCount += 8;
+        settledOrderCount += 1; 
       } else if (sellAmount > buyAmount) { 
         Exchange.deposit(buyAccount, "BitCoin", buyAmount, {from:eth.accounts[0], gas:100000}); 
         Exchange.withdraw(buyAccount, "USD", buyAmount * buyPrice, {from:eth.accounts[0], gas:100000});
@@ -101,6 +108,8 @@ function settle() {
         sellOrderKey = nextSellOrderKey;
         buyPrice = getPrice(buyOrderKey);
 
+        transactionCount += 8;
+        settledOrderCount += 1;
       } else if (sellAmount == buyAmount) {
         Exchange.deposit(buyAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:100000}); 
         Exchange.withdraw(buyAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:100000});
@@ -117,12 +126,14 @@ function settle() {
         sellOrderKey = nextSellOrderKey;
         buyPrice = getPrice(buyOrderKey);
         sellPrice = getPrice(sellOrderKey);
+
+        transactionCount += 8;
+        settledOrderCount += 2; 
         break;
       }
-
-      nextSellOrderKey = getNextKey(sellOrderKey);
-      prevBuyOrderKey = getPrevKey(buyOrderkey);
     }
+    mine();
+    console.log('Settled orders: ' + settledOrderCount);
   }
 
 
