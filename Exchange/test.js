@@ -78,7 +78,7 @@ function settle() {
       Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
       Exchange.partiallyFilled(buyOrderKey, {from:eth.accounts[0], gas:50000});
 
-      nextSellOrderKey = Exchange.getNextKey(sellOrderKey);
+      nextSellOrderKey = Exchange.getNext(sellOrderKey);
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
 
       sellOrderKey = nextSellOrderKey;
@@ -98,7 +98,7 @@ function settle() {
       Exchange.setAmount(sellOrder, sellAmount - buyAmount, {from:eth.accounts[0], gas:50000});
       Exchange.partiallyFilled(sellOrderKey, {from:eth.accounts[0], gas:50000});
       
-      prevBuyOrderKey = Exchange.getPrevKey(buyOrderKey);
+      prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
       buyOrderKey = prevBuyOrderKey;
       sellOrderKey = nextSellOrderKey;
@@ -117,8 +117,8 @@ function settle() {
       Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
       Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
       
-      prevBuyOrderKey = Exchange.getPrevKey(buyOrderKey);
-      nextSellOrderKey = Exchange.getNextKey(sellOrderKey);
+      prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
+      nextSellOrderKey = Exchange.getNext(sellOrderKey);
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
       buyOrderKey = prevBuyOrderKey; 
