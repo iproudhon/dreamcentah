@@ -458,4 +458,18 @@ contract Exchange {
         orders[orderKey].partially_filled = true; 
         return true;
     }
+
+    function getOrderInfo(bytes32 orderKey) public returns(address, bytes32, string, string, uint, uint, string) {
+        string status; 
+        if (orders[orderKey].cancelled)
+            status = "Cancelled";
+        else if (orders[orderKey].settled)
+            status = "Settled";
+        else if (orders[orderKey].partially_filled)
+            status = "Partially filled";
+        else
+            status = "Open"; 
+        
+        return (orders[orderKey].account, orders[orderKey].orderKey, orders[orderKey].giveCurrencyName, orders[orderKey].getCurrencyName, orders[orderKey].amount, orders[orderKey].price, status);
+    }
 }
