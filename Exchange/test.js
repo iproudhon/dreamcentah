@@ -129,11 +129,9 @@ function settle() {
       mine();
       settledOrderCount += 2;
       console.log('2 orders settled');
-      break;
     }
-    console.log('In loop');
   }
-  console.log('Settled orders: ' + settledOrderCount);
+  console.log('Total settled orders: ' + settledOrderCount);
 }
 
 function getOrderInfo(orderKey) {
