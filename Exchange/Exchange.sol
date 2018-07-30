@@ -108,6 +108,7 @@ contract Exchange {
         return marketPrice;
     }
 
+/*
     function settle() public returns(bool) {
         bytes32 buyOrderKey;
         bytes32 sellOrderKey;
@@ -182,7 +183,7 @@ contract Exchange {
         }
         return true;
     }
-
+*/
     function insert(
         address account,
         bytes32 orderKey,
@@ -427,51 +428,34 @@ contract Exchange {
     function sizes() public view returns (uint, uint, uint, uint, uint) {
         return (length, sell_length, buy_length, cancelled_length, settled_length);
     }
-/*
-//functions below only to be used externally
- 
-    function getOrder(bytes32 orderKey) public view returns (bytes32, uint256, bytes32, bytes32) {
-        if(orders[orderKey].orderKey.length == 0) 
-            return;    
-        
-        //key, value, prev, next, status_prev, status_next, status_prev, status_next
-        return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].prev, orders[orderKey].next);
+
+    function getPrev(bytes32 orderKey) public view returns (bytes32) {
+        return orders[orderKey].status_prev;
     }
-    
-    function getStatusOrder(bytes32 orderKey) public view returns (bytes32, uint256, uint256, bytes32, bytes32) {
-        if(orders[orderKey].orderKey.length == 0) 
-            return;    
-        
-        //key, value, prev, next, status_prev, status_next, status_prev, status_next
-        return (orders[orderKey].orderKey, orders[orderKey].price, orders[orderKey].amount, orders[orderKey].status_prev, orders[orderKey].status_next);
+
+    function getNext(bytes32 orderKey) public view returns (bytes32) {
+        return orders[orderKey].status_Next;
     }
-    
-    function getSellHead() public view returns (bytes32, uint256, bytes32, bytes32) {
-        if(sell_head.length == 0)
-            return;    
-        
-        return (orders[sell_head].orderKey, orders[sell_head].price, orders[sell_head].status_prev, orders[sell_head].status_next);
+
+    function getPrice(bytes32 orderKey) public view returns (uint) {
+        return orders[orderKey].price;
     }
-    
-    function getSellTail() public view returns (bytes32, uint256, bytes32, bytes32) {
-        if(sell_tail.length == 0)
-            return;    
-        
-        return (orders[sell_tail].orderKey, orders[sell_tail].price, orders[sell_tail].status_prev, orders[sell_tail].status_next);
+
+    function getAmount(bytes32 orderKey) public view returns (uint) {
+        return orders[orderKey].amount;
     }
-    
-    function getBuyHead() public view returns (bytes32, uint256, bytes32, bytes32) {
-        if(buy_head.length == 0) 
-            return;    
-        
-        return (orders[buy_head].orderKey, orders[buy_head].price, orders[buy_head].status_prev, orders[buy_head].status_next);
+
+    function getAccount(bytes32 orderKey) public view returns (address) {
+        return orders[orderKey].account;
     }
-    
-    function getBuyTail() public view returns (bytes32, uint256, bytes32, bytes32) {
-        if(buy_tail.length == 0)
-            return;    
-        
-        return (orders[buy_tail].orderKey, orders[buy_tail].price, orders[buy_tail].status_prev, orders[buy_tail].status_next);
+
+    function setAmount(bytes32 orderKey, uint newAmount) public returns (bool) {
+        orders[orderKey].amount = newAmount; 
+        return true;
     }
-    */
+
+    function partiallyFilled(bytes32 orderKey) public returns(bool) { 
+        orders[orderKey].partially_filled = true; 
+        return true;
+    }
 }
