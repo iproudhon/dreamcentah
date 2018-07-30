@@ -30,14 +30,12 @@ function showBalance() {
 
 }
 
-function testOrders() {
-  showBalance();
+function testOrders1()) {
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 1);
   mine();
-  settle();
-  console.log('after settling');
-  showBalance();
+  var buyOrder = Exchange.buy_tail();
+  var sellOrder = Exchange.sell_head();
 }
 
 function createLimitOrder(account, giveCurrency, getCurrency, price, amount) {
@@ -134,8 +132,9 @@ function settle() {
       console.log('2 orders settled');
       break;
     }
-    console.log('Settled orders: ' + settledOrderCount);
+    console.log('In loop');
   }
+  console.log('Settled orders: ' + settledOrderCount);
 }
 
 function getOrderInfo(orderKey) {
