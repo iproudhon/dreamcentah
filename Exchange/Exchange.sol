@@ -12,9 +12,7 @@ contract Exchange {
         bytes32 next;
         bytes32 status_prev; //in different list depending on status
         bytes32 status_next;
-        bool partially_filled; //if true, user cannot cancel the order
-        bool cancelled; //consider the race condition of cancel operation
-        bool settled;
+        uint status; //0 - open 1- partially filled 2- settled 3 - cancelled 
     }
 
     uint public length = 0;
@@ -27,7 +25,7 @@ contract Exchange {
     bytes32 public sell_tail;
     bytes32 public buy_head;
     bytes32 public buy_tail;
-    bytes32 public cancelled_head;
+    bytes32 public cancelled_head; //cancelled and settled lists can be combined if gas amount required to deploy this contract is too high
     bytes32 public cancelled_tail;
     bytes32 public settled_head; 
     bytes32 public settled_tail;
@@ -75,7 +73,6 @@ contract Exchange {
         //connect the account to the order 
         accountOrders[account].push(orderkey);
     }
-    
     
     function createMarketOrder(
         address account,
@@ -132,7 +129,8 @@ contract Exchange {
         orders[orderKey].getCurrencyName = getCurr;
         orders[orderKey].price = price;
         orders[orderKey].amount = amount; 
-        
+        orders[orderKey].status = 0;
+
         if(length == 0) {
             
             head = orderKey;
@@ -266,8 +264,7 @@ contract Exchange {
     function cancel(bytes32 targetkey) public { //consider race condition
         
         //to make sure that a targetkey can only be cancelled from the buy/sell lists
-        if(orders[targetkey].cancelled != true && orders[targetkey].settled != true 
-          && orders[targetkey].partially_filled == false)
+        if(orders[targetkey].status = 0)
         {
             remove(targetkey);
             if (cancelled_length == 0) {
@@ -281,14 +278,14 @@ contract Exchange {
                 cancelled_length++; 
             }
             
-            orders[targetkey].cancelled = true;
+            orders[targetkey].status = 3;
         }
     }
 
     function putSettle(bytes32 targetkey) public { //consider race condition
         
         //to make sure that a targetkey can only be cancelled from the buy/sell lists
-        if(orders[targetkey].cancelled != true && orders[targetkey].settled != true)
+        if(orders[targetkey].status == 0 || orders[targetkey].status == 1)
         {
             remove(targetkey);
             if (settled_length == 0) {
@@ -302,8 +299,7 @@ contract Exchange {
                 settled_length++; 
             }
             
-            orders[targetkey].partially_filled = false;
-            orders[targetkey].settled = true;
+            orders[targetkey].status = 2;
         }
     }
 
@@ -373,27 +369,18 @@ contract Exchange {
         return orders[orderKey].account;
     }
 
+    function getStatus(bytes32 orderKey) public view returns (uint) {
+        return orders[orderKey].status;
+    }
+
     function setAmount(bytes32 orderKey, uint newAmount) public returns (bool) {
         orders[orderKey].amount = newAmount; 
         return true;
     }
 
     function partiallyFilled(bytes32 orderKey) public returns(bool) { 
-        orders[orderKey].partially_filled = true; 
+        orders[orderKey].status = 1; 
         return true;
     }
 
-    function getOrderInfo(bytes32 orderKey) public view returns(address, bytes32, string, string, uint, uint, string) {
-        string memory status; 
-        if (orders[orderKey].cancelled)
-            status = "Cancelled";
-        else if (orders[orderKey].settled)
-            status = "Settled";
-        else if (orders[orderKey].partially_filled)
-            status = "Partially filled";
-        else
-            status = "Open"; 
-        
-        return (orders[orderKey].account, orders[orderKey].orderKey, orders[orderKey].giveCurrencyName, orders[orderKey].getCurrencyName, orders[orderKey].amount, orders[orderKey].price, status);
-    }
 }

@@ -131,8 +131,27 @@ function settle() {
     }
     console.log('Settled orders: ' + settledOrderCount);
   }
-
-
-  
 }
 
+function getOrderInfo(orderKey) {
+  var account = Exchange.getAccount(orderKey);
+  var giveCurrency = Exchange.giveCurrency(orderKey);
+  var getCurrency = Exchange.getCurrency(orderKey);
+  var price = Exchange.getPrice(orderKey);
+  var amount = Exchange.getAmount(orderKey); 
+  var status; 
+  switch (Exchange.getStatus(orderKey)) {
+    case 0: 
+      status = "open";
+      break;
+    case 1: 
+      status = "partially filled";
+      break;
+    case 2:
+      status = "settled";
+      break;
+    case 3:
+      status = "cancelled";
+  }
+  return (account, giveCurrency, getCurrency, price, amount, status);
+}
