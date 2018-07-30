@@ -52,7 +52,7 @@ contract Exchange {
         return balance[currencyName][account];
     }
 
-    function getOrderkey() public returns(bytes32 key) {
+    function getOrderKey() public returns(bytes32 key) {
         key = keccak256(abi.encodePacked(nonce));
         nonce++;
         return key;
