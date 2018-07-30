@@ -460,7 +460,7 @@ contract Exchange {
     }
 
     function getOrderInfo(bytes32 orderKey) public returns(address, bytes32, string, string, uint, uint, string) {
-        string status; 
+        string memory status; 
         if (orders[orderKey].cancelled)
             status = "Cancelled";
         else if (orders[orderKey].settled)
