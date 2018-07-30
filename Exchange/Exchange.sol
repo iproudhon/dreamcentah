@@ -459,7 +459,7 @@ contract Exchange {
         return true;
     }
 
-    function getOrderInfo(bytes32 orderKey) public returns(address, bytes32, string, string, uint, uint, string) {
+    function getOrderInfo(bytes32 orderKey) public view returns(address, bytes32, string, string, uint, uint, string) {
         string memory status; 
         if (orders[orderKey].cancelled)
             status = "Cancelled";
