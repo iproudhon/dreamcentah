@@ -33,8 +33,6 @@ function testOrders1() {
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 1);
   mine();
-  var buyOrder = Exchange.buy_tail();
-  var sellOrder = Exchange.sell_head();
 }
 
 function createLimitOrder(account, giveCurrency, getCurrency, price, amount) {
@@ -74,8 +72,8 @@ function settle() {
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
       
-      Exchange.setAmount(buyOrder, buyAmount - sellAmount, {from:eth.accounts[0], gas:50000});
-      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(buyOrderKey, buyAmount - sellAmount, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(sellOrderKey, 0, {from:eth.accounts[0], gas:50000});
       Exchange.partiallyFilled(buyOrderKey, {from:eth.accounts[0], gas:50000});
 
       nextSellOrderKey = Exchange.getNext(sellOrderKey);
@@ -94,8 +92,8 @@ function settle() {
       deposit(sellAccount, "USD", buyAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", buyAmount);
       
-      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
-      Exchange.setAmount(sellOrder, sellAmount - buyAmount, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(buyOrderKey, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(sellOrderKey, sellAmount - buyAmount, {from:eth.accounts[0], gas:50000});
       Exchange.partiallyFilled(sellOrderKey, {from:eth.accounts[0], gas:50000});
       
       prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
@@ -114,8 +112,8 @@ function settle() {
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
       
-      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
-      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(buyOrderKey, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(sellOrderKey, 0, {from:eth.accounts[0], gas:50000});
       
       prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
       nextSellOrderKey = Exchange.getNext(sellOrderKey);
