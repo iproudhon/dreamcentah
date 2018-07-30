@@ -60,72 +60,74 @@ function settle() {
   buyOrderKey = Exchange.buy_tail(); //highest buy price orderkey
   sellOrderKey = Exchange.sell_head(); //lowest sel price order key 
 
-  buyPrice = getPrice(buyOrderKey);
-  sellPrice = getPrice(sellOrderKey);
+  buyPrice = Exchange.getPrice(buyOrderKey);
+  sellPrice = Exchange.getPrice(sellOrderKey);
 
   if (buyPrice >= sellPrice) { //condition for any settle function to happen
     while (buyPrice >= sellPrice) {
 
-      buyAmount = getAmount(buyOrderKey);
-      buyAccount = getAccount(buyOrderKey);
+      buyAmount = Exchange.getAmount(buyOrderKey);
+      buyAccount = Exchange.getAccount(buyOrderKey);
 
-      sellAmount = getAmount(sellOrderKey);
-      sellAccount = getAccount(sellOrderKey);
+      sellAmount = Exchange.getAmount(sellOrderKey);
+      sellAccount = Exchange.getAccount(sellOrderKey);
 
       if (buyAmount > sellAmount) {
-        Exchange.deposit(buyAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000}); 
-        Exchange.withdraw(buyAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        Exchange.deposit(sellAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        Exchange.withdraw(sellAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000});
+        deposit(buyAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000}); 
+        withdraw(buyAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
+        deposit(sellAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
+        withdraw(sellAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000});
+        
         Exchange.setAmount(buyOrder, buyAmount - sellAmount, {from:eth.accounts[0], gas:50000});
         Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
         Exchange.partiallyFilled(buyOrderKey, {from:eth.accounts[0], gas:50000});
 
-        nextSellOrderKey = getNextKey(sellOrderKey);
+        nextSellOrderKey = Exchange.getNextKey(sellOrderKey);
         Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:50000});
         sellOrderKey = nextSellOrderKey;
-        sellPrice = getPrice(sellOrderKey);
+        sellPrice = Exchange.getPrice(sellOrderKey);
 
         mine();
-
         settledOrderCount += 1; 
+
       } else if (sellAmount > buyAmount) { 
-        Exchange.deposit(buyAccount, "BitCoin", buyAmount, {from:eth.accounts[0], gas:50000}); 
-        Exchange.withdraw(buyAccount, "USD", buyAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        Exchange.deposit(sellAccount, "USD", buyAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        Exchange.withdraw(sellAccount, "BitCoin", buyAmount, {from:eth.accounts[0], gas:50000});
+        deposit(buyAccount, "BitCoin", buyAmount, {from:eth.accounts[0], gas:50000}); 
+        withdraw(buyAccount, "USD", buyAmount * buyPrice, {from:eth.accounts[0], gas:50000});
+        deposit(sellAccount, "USD", buyAmount * buyPrice, {from:eth.accounts[0], gas:50000});
+        withdraw(sellAccount, "BitCoin", buyAmount, {from:eth.accounts[0], gas:50000});
+        
         Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
         Exchange.setAmount(sellOrder, sellAmount - buyAmount, {from:eth.accounts[0], gas:50000});
         Exchange.partiallyFilled(sellOrderKey, {from:eth.accounts[0], gas:50000});
         
-        prevBuyOrderKey = getPrevKey(buyOrderKey);
+        prevBuyOrderKey = Exchange.getPrevKey(buyOrderKey);
         Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:50000});
         buyOrderKey = prevBuyOrderKey;
         sellOrderKey = nextSellOrderKey;
-        buyPrice = getPrice(buyOrderKey);
+        buyPrice = Exchange.getPrice(buyOrderKey);
 
         mine();
-
         settledOrderCount += 1;
+
       } else if (sellAmount == buyAmount) {
-        Exchange.deposit(buyAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000}); 
-        Exchange.withdraw(buyAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        Exchange.deposit(sellAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
-        Exchange.withdraw(sellAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000});
+        deposit(buyAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000}); 
+        withdraw(buyAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
+        deposit(sellAccount, "USD", sellAmount * buyPrice, {from:eth.accounts[0], gas:50000});
+        withdraw(sellAccount, "BitCoin", sellAmount, {from:eth.accounts[0], gas:50000});
+        
         Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
         Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
         
-        prevBuyOrderKey = getPrevKey(buyOrderKey);
-        nextSellOrderKey = getNextKey(sellOrderKey);
+        prevBuyOrderKey = Exchange.getPrevKey(buyOrderKey);
+        nextSellOrderKey = Exchange.getNextKey(sellOrderKey);
         Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:50000});
         Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:50000});
         buyOrderKey = prevBuyOrderKey; 
         sellOrderKey = nextSellOrderKey;
-        buyPrice = getPrice(buyOrderKey);
-        sellPrice = getPrice(sellOrderKey);
+        buyPrice = Exchange.getPrice(buyOrderKey);
+        sellPrice = Exchange.getPrice(sellOrderKey);
         
         mine();
-
         settledOrderCount += 2; 
         break;
       }
@@ -155,4 +157,16 @@ function getOrderInfo(orderKey) {
       status = "cancelled";
   }
   return (account, giveCurrency, getCurrency, price, amount, status);
+}
+
+function deposit(account, currencyName, amount) {
+  Exchange.deposit(account, currencyName, amount, {from:eth.accounts[0], gas:50000});  
+}
+
+function withdraw(account, currencyName, amount) {
+  Exchange.withdraw(account, currencyName, amount, {from:eth.accounts[0], gas:50000});
+}
+
+function getBalance(account, currencyName) {
+  Exchange.getBalance(account, currencyName);
 }
