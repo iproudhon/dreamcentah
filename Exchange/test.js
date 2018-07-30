@@ -58,15 +58,15 @@ function settle() {
   buyOrderKey = Exchange.buy_tail(); //highest buy price orderkey
   sellOrderKey = Exchange.sell_head(); //lowest sel price order key 
 
-  buyPrice = Exchange.getPrice(buyOrderKey);
-  sellPrice = Exchange.getPrice(sellOrderKey);
+  buyPrice = Number(Exchange.getPrice(buyOrderKey));
+  sellPrice = Number(Exchange.getPrice(sellOrderKey));
 
   while (buyPrice >= sellPrice && Exchange.sizes()[1] > 0 && Exchange.sizes()[2] > 0) { //buy Length and sell length both greater than 0
 
-    buyAmount = Exchange.getAmount(buyOrderKey);
+    buyAmount = Number(Exchange.getAmount(buyOrderKey));
     buyAccount = Exchange.getAccount(buyOrderKey);
 
-    sellAmount = Exchange.getAmount(sellOrderKey);
+    sellAmount = Number(Exchange.getAmount(sellOrderKey));
     sellAccount = Exchange.getAccount(sellOrderKey);
 
     if (buyAmount > sellAmount) {
@@ -83,7 +83,7 @@ function settle() {
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
 
       sellOrderKey = nextSellOrderKey;
-      sellPrice = Exchange.getPrice(sellOrderKey);
+      sellPrice = Number(Exchange.getPrice(sellOrderKey));
 
       mine();
       settledOrderCount += 1; 
@@ -103,7 +103,7 @@ function settle() {
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
       buyOrderKey = prevBuyOrderKey;
       sellOrderKey = nextSellOrderKey;
-      buyPrice = Exchange.getPrice(buyOrderKey);
+      buyPrice = Number(Exchange.getPrice(buyOrderKey));
 
       mine();
       settledOrderCount += 1;
@@ -124,8 +124,8 @@ function settle() {
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
       buyOrderKey = prevBuyOrderKey; 
       sellOrderKey = nextSellOrderKey;
-      buyPrice = Exchange.getPrice(buyOrderKey);
-      sellPrice = Exchange.getPrice(sellOrderKey);
+      buyPrice = Number(Exchange.getPrice(buyOrderKey));
+      sellPrice = Number(Exchange.getPrice(sellOrderKey));
       
       mine();
       settledOrderCount += 2;
