@@ -264,7 +264,7 @@ contract Exchange {
     function cancel(bytes32 targetkey) public { //consider race condition
         
         //to make sure that a targetkey can only be cancelled from the buy/sell lists
-        if(orders[targetkey].status = 0)
+        if(orders[targetkey].status == 0)
         {
             remove(targetkey);
             if (cancelled_length == 0) {
