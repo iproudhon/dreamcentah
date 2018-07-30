@@ -434,7 +434,7 @@ contract Exchange {
     }
 
     function getNext(bytes32 orderKey) public view returns (bytes32) {
-        return orders[orderKey].status_Next;
+        return orders[orderKey].status_next;
     }
 
     function getPrice(bytes32 orderKey) public view returns (uint) {
