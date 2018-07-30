@@ -75,7 +75,7 @@ function settle() {
       deposit(buyAccount, "BitCoin", sellAmount); 
       withdraw(buyAccount, "USD", sellAmount * buyPrice);
       deposit(sellAccount, "USD", sellAmount * buyPrice);
-      withdraw(sellAccount, "BitCoin", sellAmount, );
+      withdraw(sellAccount, "BitCoin", sellAmount);
       
       Exchange.setAmount(buyOrder, buyAmount - sellAmount, {from:eth.accounts[0], gas:50000});
       Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
@@ -112,7 +112,7 @@ function settle() {
       console.log('1 order settled');
 
     } else if (sellAmount == buyAmount) {
-      deposit(buyAccount, "BitCoin", sellAmount, ); 
+      deposit(buyAccount, "BitCoin", sellAmount); 
       withdraw(buyAccount, "USD", sellAmount * buyPrice);
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
