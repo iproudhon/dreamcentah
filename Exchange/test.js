@@ -39,7 +39,7 @@ function testOrders1() {
 }
 
 
-n testOrders2() {
+function testOrders2() {
   showBalance();
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1200, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 900, 1);  
@@ -246,4 +246,30 @@ function withdraw(account, currencyName, amount) {
 
 function getBalance(account, currencyName) {
   Exchange.getBalance(account, currencyName);
+}
+
+function displayOpenOrders() {
+  
+}
+
+function displayAccountOrders(account) {
+  var length = Exchange.accountOrderLength(account);
+  var i;
+  var orderType;
+  var orerPrice;
+  var orderAmount;
+  var orderStatus;
+  console.log("Order Type" + " Price " + " Amount " + " Status ");
+  for (i = 0; i < length; i++) {
+    accountOrder = getOrderInfo(Exchange.accountOrder(account, i));
+    if (accountOrder[1] == "USD") //giveCurrency is USD
+      orderType = "Buy";
+    else if (accountOrder == "BitCoin")
+      orderType = "Sell";
+    
+    orderPrice = Number(accountOrder[3]);
+    orderAmount = Number(accountOrder[4]);
+    orderStatus = accountOrder[5];
+    console.log(orderType + " " + orderPrice + " " + orderAmount + " " + orderStatus);
+  }
 }

@@ -349,6 +349,14 @@ contract Exchange {
         return (length, sell_length, buy_length, cancelled_length, settled_length);
     }
 
+    function giveCurrency(bytes32 orderKey) public view returns (string) {
+        return orders[orderKey].giveCurrency;
+    }
+
+    function getCurrency(bytes32 orderKey) public view returns (string) {
+        return orders[orderKey].getCurency;
+    }
+
     function getPrev(bytes32 orderKey) public view returns (bytes32) {
         return orders[orderKey].status_prev;
     }
@@ -379,8 +387,15 @@ contract Exchange {
     }
 
     function partiallyFilled(bytes32 orderKey) public returns(bool) { 
-        orders[orderKey].status = 1; 
+        orders[orderKey].status = 1;
         return true;
     }
 
+    function accountOrderLength(address account) public view returns(uint) {
+        return accountOrders[account].length;
+    }
+
+    function accountOrder(address account, uint pos) public view returns(bytes32) {
+        return accountOrders[account][pos];
+    }
 }
