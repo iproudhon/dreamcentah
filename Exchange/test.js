@@ -208,7 +208,7 @@ function getOrderInfo(orderKey) {
   var price = Exchange.getPrice(orderKey);
   var amount = Exchange.getAmount(orderKey); 
   var status; 
-  switch (Exchange.getStatus(orderKey)) {
+  switch (Number(Exchange.getStatus(orderKey))) {
     case 0: 
       status = "open";
       break;
