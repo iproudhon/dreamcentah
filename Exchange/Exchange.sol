@@ -66,12 +66,14 @@ contract Exchange {
         uint price,
         uint amount
     ) 
-        public 
+        public returns(bytes32)
     { 
         insert(account, orderkey, giveCurrencyName, getCurrencyName, price, amount);
         
         //connect the account to the order 
         accountOrders[account].push(orderkey);
+
+        return orderkey;
     }
     
     function createMarketOrder(

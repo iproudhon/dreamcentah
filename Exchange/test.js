@@ -34,53 +34,35 @@ function testOrders1() {
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 1);
   mine();
-  var buyOrder = Exchange.buy_tail();
-  var sellOrder = Exchange.sell_head();
 }
 
 
 function testOrders2() {
-  showBalance();
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1200, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 900, 1);  
   createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 300, 1);
   mine();
-  settle();
-  console.log('after settling');
-  showBalance();
 }
 
 function testOrders3() {
-  showBalance();
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 900, 1);
   createLimitOrder(eth.accounts[1], 'USD', 'BitCoin', 300, 1);
   createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1200, 1);
   mine();
-  settle();
-  console.log('after settling');
-  showBalance();
 }
 
 function testOrders4() {
-  showBalance();
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'USD', 'BitCoin', 2000, 1);
   createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 5000, 1);
   mine();
-  settle();
-  console.log('after settling');
-  showBalance();
 }
 
 function testOrders5() {
-  showBalance();
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 5000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 2);
   createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 1);
   mine();
-  settle();
-  console.log('after settling');
-  showBalance();
 }
 
 function testOrders6() {
@@ -89,9 +71,6 @@ function testOrders6() {
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 0, 1);
   createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 2);
   mine();
-  settle();
-  console.log('after settling');
-  showBalance();
 }
 
 function testOrders7() {
@@ -100,9 +79,6 @@ function testOrders7() {
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 100, 1);
   createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 2);
   mine();
-  settle();
-  console.log('after settling');
-  showBalance();
 }
 
 function testOrders8() {
@@ -245,7 +221,7 @@ function getOrderInfo(orderKey) {
     case 3:
       status = "cancelled";
   }
-  return (account, giveCurrency, getCurrency, price, amount, status);
+  return [account, giveCurrency, getCurrency, price, amount, status];
 }
 
 function displayAllOpenOrders() {
@@ -279,10 +255,6 @@ function displayAllOpenOrders() {
   }
 }
 
-function displayOpenOrders(length) {
-  
-}
-
 function displayAccountOrders(account) {
   var length = Exchange.accountOrderLength(account);
   var i;
@@ -304,3 +276,4 @@ function displayAccountOrders(account) {
     console.log(orderType , " " , orderPrice , " " , orderAmount , " " , orderStatus);
   }
 }
+
