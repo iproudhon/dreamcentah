@@ -251,7 +251,7 @@ function displayAllOpenOrders() {
     orderAmount = Number(sellOrder[4]);
 
     console.log(orderPrice, " ", orderAmount);
-    sellOrderKey = Exchang.getNext(sellOrderKey);
+    sellOrderKey = Exchange.getNext(sellOrderKey);
   }
 }
 
