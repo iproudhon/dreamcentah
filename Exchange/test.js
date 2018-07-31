@@ -243,6 +243,7 @@ function displayAllOpenOrders() {
   }
 
 //sellOrders
+  console.log("Sell Orders");
   var sellLength = Exchange.sell_length();
   var sellOrderKey = Exchange.sell_head(); //from lowest
   for (i = 0; i < sellLength; i++) {
