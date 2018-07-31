@@ -8,6 +8,7 @@ contract Exchange {
         string getCurrencyName; 
         uint price; //for settle function changed from string to uint
         uint amount;
+        uint filled_amount;
         bytes32 prev; 
         bytes32 next;
         bytes32 status_prev; //in different list depending on status

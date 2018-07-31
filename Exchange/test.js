@@ -277,6 +277,7 @@ function displaySettledOrders() {
     console.log(account, " ", orderType, " ", orderPrice, " ", orderAmount);
     orderKey = Exchange.getNext(orderKey);
   }
+  return length;
 }
 
 function displayCancelledOrders() {
@@ -300,6 +301,7 @@ function displayCancelledOrders() {
     console.log(account, " ", orderType, " ", orderPrice, " ", orderAmount);
     orderKey = Exchange.getNext(orderKey);
   }
+  return length;
 }
 
 
