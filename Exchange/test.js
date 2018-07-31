@@ -169,8 +169,8 @@ function settle() {
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
       
-      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
-      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
+      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:500000});
+      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:500000});
       
       prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
       nextSellOrderKey = Exchange.getNext(sellOrderKey);
@@ -256,6 +256,53 @@ function displayAllOpenOrders() {
   }
 }
 
+function displaySettledOrders() {
+  var length = Exchange.settled_length();
+  var orderKey = settled_head();
+  var account;
+  var orderType;
+  var orderPrice;
+  var orderAmount;
+  for (i = 0; i < length; i++) {
+    order = getOrderInfo(orderKey);
+    account = order[0].substr(0,10); //abbreviated account address
+    
+    if (order[1] == "USD") //giveCurrency is USD
+      orderType = "Buy";
+    else if (order[1] == "BitCoin") //giveCurrency is BitCoin
+      orderType = "Sell";
+    
+    orderPrice = Number(order[3]);
+    orderAmount = Number(order[4]);
+    console.log(account, " ", orderType, " ", orderPrice, " ", orderAmount);
+    orderKey = Exchange.getNext(orderKey);
+  }
+}
+
+function displayCancelledOrders() {
+  var length = Exchange.cancelled_length();
+  var orderKey = cancelled_head();
+  var account;
+  var orderType;
+  var orderPrice;
+  var orderAmount;
+  for (i = 0; i < length; i++) {
+    order = getOrderInfo(orderKey);
+    account = order[0].substr(0,10); //abbreviated account address
+    
+    if (order[1] == "USD") //giveCurrency is USD
+      orderType = "Buy";
+    else if (order[1] == "BitCoin") //giveCurrency is BitCoin
+      orderType = "Sell";
+    
+    orderPrice = Number(order[3]);
+    orderAmount = Number(order[4]);
+    console.log(account, " ", orderType, " ", orderPrice, " ", orderAmount);
+    orderKey = Exchange.getNext(orderKey);
+  }
+}
+
+
 function displayAccountOrders(account) {
   var length = Exchange.accountOrderLength(account);
   var i;
@@ -268,7 +315,7 @@ function displayAccountOrders(account) {
     accountOrder = getOrderInfo(Exchange.accountOrder(account, i));
     if (accountOrder[1] == "USD") //giveCurrency is USD
       orderType = "Buy";
-    else if (accountOrder == "BitCoin")
+    else if (accountOrder[1] == "BitCoin")
       orderType = "Sell";
     
     orderPrice = Number(accountOrder[3]);
