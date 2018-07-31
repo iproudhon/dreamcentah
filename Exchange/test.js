@@ -258,7 +258,7 @@ function displayAllOpenOrders() {
 
 function displaySettledOrders() {
   var length = Exchange.settled_length();
-  var orderKey = settled_head();
+  var orderKey = Exchange.settled_head();
   var account;
   var orderType;
   var orderPrice;
@@ -281,7 +281,7 @@ function displaySettledOrders() {
 
 function displayCancelledOrders() {
   var length = Exchange.cancelled_length();
-  var orderKey = cancelled_head();
+  var orderKey = Exchange.cancelled_head();
   var account;
   var orderType;
   var orderPrice;
