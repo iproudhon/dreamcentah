@@ -350,11 +350,11 @@ contract Exchange {
     }
 
     function giveCurrency(bytes32 orderKey) public view returns (string) {
-        return orders[orderKey].giveCurrency;
+        return orders[orderKey].giveCurrencyName;
     }
 
     function getCurrency(bytes32 orderKey) public view returns (string) {
-        return orders[orderKey].getCurency;
+        return orders[orderKey].getCurrencyName;
     }
 
     function getPrev(bytes32 orderKey) public view returns (bytes32) {

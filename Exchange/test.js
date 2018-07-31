@@ -213,6 +213,18 @@ function settle() {
   console.log('Total settled orders: ' + settledOrderCount);
 }
 
+function deposit(account, currencyName, amount) {
+  Exchange.deposit(account, currencyName, amount, {from:eth.accounts[0], gas:50000});  
+}
+
+function withdraw(account, currencyName, amount) {
+  Exchange.withdraw(account, currencyName, amount, {from:eth.accounts[0], gas:50000});
+}
+
+function getBalance(account, currencyName) {
+  Exchange.getBalance(account, currencyName);
+}
+
 function getOrderInfo(orderKey) {
   var account = Exchange.getAccount(orderKey);
   var giveCurrency = Exchange.giveCurrency(orderKey);
@@ -236,19 +248,38 @@ function getOrderInfo(orderKey) {
   return (account, giveCurrency, getCurrency, price, amount, status);
 }
 
-function deposit(account, currencyName, amount) {
-  Exchange.deposit(account, currencyName, amount, {from:eth.accounts[0], gas:50000});  
+function displayAllOpenOrders() {
+//buyOrders 
+  var buyLength = Exchange.buy_length();
+  var i;
+  var buyOrderKey = Exchange.buy_tail(); //from highest
+  var buyOrder;
+  var orderPrice; 
+  var orderAmount;
+  console.log("Buy Orders");
+  for (i = 0; i < buyLength; i++) {
+    buyOrder = getOrderInfo(buyOrderKey);
+    orderPrice = Number(buyOrder[3]);
+    orderAmount = Number(buyOrder[4]);
+
+    console.log(orderPrice, " ", orderAmount);
+    buyOrderKey = Exchange.getPrev(buyOrderKey);
+  }
+
+//sellOrders
+  var sellLength = Exchange.sell_length();
+  var sellOrderKey = Exchange.sell_head(); //from lowest
+  for (i = 0; i < sellLength; i++) {
+    sellOrder = getOrderInfo(sellOrderKey);
+    orderPrice = Number(sellOrder[3]);
+    orderAmount = Number(sellOrder[4]);
+
+    console.log(orderPrice, " ", orderAmount);
+    sellOrderKey = Exchang.getNext(sellOrderKey);
+  }
 }
 
-function withdraw(account, currencyName, amount) {
-  Exchange.withdraw(account, currencyName, amount, {from:eth.accounts[0], gas:50000});
-}
-
-function getBalance(account, currencyName) {
-  Exchange.getBalance(account, currencyName);
-}
-
-function displayOpenOrders() {
+function displayOpenOrders(length) {
   
 }
 
@@ -256,7 +287,7 @@ function displayAccountOrders(account) {
   var length = Exchange.accountOrderLength(account);
   var i;
   var orderType;
-  var orerPrice;
+  var orderPrice;
   var orderAmount;
   var orderStatus;
   console.log("Order Type" + " Price " + " Amount " + " Status ");
@@ -270,6 +301,6 @@ function displayAccountOrders(account) {
     orderPrice = Number(accountOrder[3]);
     orderAmount = Number(accountOrder[4]);
     orderStatus = accountOrder[5];
-    console.log(orderType + " " + orderPrice + " " + orderAmount + " " + orderStatus);
+    console.log(orderType , " " , orderPrice , " " , orderAmount , " " , orderStatus);
   }
 }
