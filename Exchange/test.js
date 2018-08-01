@@ -217,11 +217,11 @@ function settle() {
 }
 
 function deposit(account, currencyName, amount) {
-  Exchange.deposit(account, currencyName, amount, {from:eth.accounts[0], gas:50000});  
+  Exchange.deposit(account, currencyName, amount, {from:eth.accounts[0], gas:70000});  
 }
 
 function withdraw(account, currencyName, amount) {
-  Exchange.withdraw(account, currencyName, amount, {from:eth.accounts[0], gas:50000});
+  Exchange.withdraw(account, currencyName, amount, {from:eth.accounts[0], gas:70000});
 }
 
 function getBalance(account, currencyName) {
@@ -272,7 +272,7 @@ function displayAllOpenOrders() {
     status = buyOrder[5];
     if (status == "partially filled") {
       filled_percentage = buyOrder[6];
-      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "& filled");
+      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "% filled");
     } else
       console.log(orderPrice, " ", orderAmount);
       
@@ -287,8 +287,60 @@ function displayAllOpenOrders() {
     sellOrder = getOrderInfo(sellOrderKey);
     orderPrice = Number(sellOrder[3]);
     orderAmount = Number(sellOrder[4]);
+    status = sellOrder[5];
+    if (status == "partially filled") {
+      filled_percentage = sellOrder[6];
+      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "% filled");
+    } else
+      console.log(orderPrice, " ", orderAmount);
 
-    console.log(orderPrice, " ", orderAmount);
+    sellOrderKey = Exchange.getNext(sellOrderKey);
+  }
+}
+
+function displayOpenOrders(buyLength, sellLength) { //displaying specified amount of orders
+  if (Exchange.buy_length() < buyLength)
+    buyLength = Exchange.buy_length();
+  if (Exchange.sell_length() < sellLength)
+    sellLength = Exchange.sell_length();
+
+  var i;
+  var buyOrderKey = Exchange.buy_tail(); //from highest
+  var buyOrder;
+  var orderPrice; 
+  var orderAmount;
+  var status;
+  var filled_percentage;
+  console.log("Displaying ", buyLength, " Buy Orders");
+  for (i = 0; i < buyLength; i++) {
+    buyOrder = getOrderInfo(buyOrderKey);
+    orderPrice = Number(buyOrder[3]);
+    orderAmount = Number(buyOrder[4]);
+    status = buyOrder[5];
+    if (status == "partially filled") {
+      filled_percentage = buyOrder[6];
+      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "% filled");
+    } else
+      console.log(orderPrice, " ", orderAmount);
+      
+    buyOrderKey = Exchange.getPrev(buyOrderKey);
+  }
+
+//sellOrders
+  console.log("Displaying ", sellLength, " Sell Orders");
+  var sellLength = Exchange.sell_length();
+  var sellOrderKey = Exchange.sell_head(); //from lowest
+  for (i = 0; i < sellLength; i++) {
+    sellOrder = getOrderInfo(sellOrderKey);
+    orderPrice = Number(sellOrder[3]);
+    orderAmount = Number(sellOrder[4]);
+    status = sellOrder[5];
+    if (status == "partially filled") {
+      filled_percentage = sellOrder[6];
+      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "% filled");
+    } else
+      console.log(orderPrice, " ", orderAmount);
+
     sellOrderKey = Exchange.getNext(sellOrderKey);
   }
 }
@@ -349,7 +401,7 @@ function displayAccountOrders(account) {
   var orderPrice;
   var orderAmount;
   var orderStatus;
-  console.log("Order Type" + " Price " + " Amount " + " Status ");
+  console.log("Number "+ " Order Type" + " Price " + " Amount " + " Status ");
   for (i = 0; i < length; i++) {
     accountOrder = getOrderInfo(Exchange.accountOrder(account, i));
     if (accountOrder[1] == "USD") //giveCurrency is USD
@@ -360,11 +412,83 @@ function displayAccountOrders(account) {
     orderPrice = Number(accountOrder[3]);
     orderAmount = Number(accountOrder[4]);
     orderStatus = accountOrder[5];
-    console.log(orderType , " " , orderPrice , " " , orderAmount , " " , orderStatus);
+    console.log(i, " ", orderType , " " , orderPrice , " " , orderAmount , " " , orderStatus);
   }
 }
 
-function marketSummary() {
+function accountSummary(account) {
+  var USDBalance;
+  var BitCoinBalance;
   
+  USDBalance = Exchange.getBalance(account, "USD");
+  BitCoinBalance = Exchange.getBalance(account, "BitCoin");
+
+  var simpleAccount = account.substr(0,10); //displaying abbreviated account address
+  console.log("Showing Summary for account: ", simpleAccount);
+  console.log('USD: ' + USDBalance + ' BitCoin: ' + BitCoinBalance);
+  displayAccountOrders(account);
 }
 
+function cancel(orderKey) {
+  var orderStatus = Exchange.getOrderInfo(orderKey)[5];
+  if (orderStatus == "open") {
+    Exchange.cancel(orderKey, {from:eth.accounts[0], gas:500000});
+    console.log("Order cancelled");
+  } else
+    console.log("The order status must be open to cancel. current order status: ", orderStatus);
+}
+
+function cancelOrder(account, orderNumber) {
+  var orderKey;
+  orderKey = Exchange.accountOrder(account, orderNumber);
+  cancel(orderKey);
+}
+
+function marketSummary() {
+  var buyLength;
+  var sellLength;
+  var marketPrice; 
+
+  Exchange.sizes()[1] = sellLength;
+  Exchange.sizes()[2] = buyLength;
+  console.log("Total ", buyLength, " buy orders, ", sellLength, " sell orders");
+  displayOpenOrders(10, 10); //displaying 10 buy orders, 10 sell orders 
+  
+  marketPrice = Number(Exchange.getMarketPrice());
+
+  console.log("Market Price: ", marketPrice);
+}
+
+/*
+class Account { 
+  constructor(password) {
+    this.password = password;
+    this.address = personal.newAccount("1");
+    this.USDBalance = 0;
+    this.BitCoinBalance = 0;
+    this.orders = [];
+  }
+
+  _deposit(currencyName, amount) {
+    personal.unlockAccount(this.address, "1", 36000);
+    deposit(this.address, currencyName, amount);
+  }
+
+  _withdraw(currencyName, amount) {
+    personal.unlockAccount(this.address, "1", 36000);
+    witdhraw(this.address, currencyName, amount);
+  }
+
+  _createLimitOrder() {
+
+  }
+
+  _createMarketOrder() { 
+
+  }
+
+  _displayAccountOrders() { 
+
+  }
+}
+*/
