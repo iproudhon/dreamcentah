@@ -129,9 +129,7 @@ function settle() {
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
       
-      Exchange.setAmount(buyOrder, buyAmount - sellAmount, {from:eth.accounts[0], gas:50000});
-      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:50000});
-      Exchange.partiallyFilled(buyOrderKey, {from:eth.accounts[0], gas:50000});
+      Exchange.partiallyFilled(buyOrderKey, sellAmount, {from:eth.accounts[0], gas:50000});
 
       nextSellOrderKey = Exchange.getNext(sellOrderKey);
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
@@ -149,9 +147,7 @@ function settle() {
       deposit(sellAccount, "USD", buyAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", buyAmount);
       
-      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:50000});
-      Exchange.setAmount(sellOrder, sellAmount - buyAmount, {from:eth.accounts[0], gas:50000});
-      Exchange.partiallyFilled(sellOrderKey, {from:eth.accounts[0], gas:50000});
+      Exchange.partiallyFilled(sellOrderKey, buyAmount, {from:eth.accounts[0], gas:50000});
       
       prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
@@ -169,8 +165,8 @@ function settle() {
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
       
-      Exchange.setAmount(buyOrder, 0, {from:eth.accounts[0], gas:500000});
-      Exchange.setAmount(sellOrder, 0, {from:eth.accounts[0], gas:500000});
+      Exchange.partiallyFilled(buyOrder, buyAmount, {from:eth.accounts[0], gas:500000}); //100% filled
+      Exchange.partiallyFilled(sellOrder, sellAmount, {from:eth.accounts[0], gas:500000});
       
       prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
       nextSellOrderKey = Exchange.getNext(sellOrderKey);
@@ -205,15 +201,18 @@ function getOrderInfo(orderKey) {
   var account = Exchange.getAccount(orderKey);
   var giveCurrency = Exchange.giveCurrency(orderKey);
   var getCurrency = Exchange.getCurrency(orderKey);
-  var price = Exchange.getPrice(orderKey);
-  var amount = Exchange.getAmount(orderKey); 
-  var status; 
+  var price = Number(Exchange.getPrice(orderKey));
+  var amount = Number(Exchange.getAmount(orderKey));
+  var filled_amount = Number(Exchange.getFilled(orderKey));
+  var status;
+  var filled_percentage;
   switch (Number(Exchange.getStatus(orderKey))) {
     case 0: 
       status = "open";
       break;
     case 1: 
       status = "partially filled";
+      filled_percentage = filled_amount / amount * 100;
       break;
     case 2:
       status = "settled";
@@ -221,7 +220,7 @@ function getOrderInfo(orderKey) {
     case 3:
       status = "cancelled";
   }
-  return [account, giveCurrency, getCurrency, price, amount, status];
+  return [account, giveCurrency, getCurrency, price, amount, status, filled_percentage];
 }
 
 function displayAllOpenOrders() {
@@ -232,13 +231,20 @@ function displayAllOpenOrders() {
   var buyOrder;
   var orderPrice; 
   var orderAmount;
+  var status;
+  var filled_percentage;
   console.log("Buy Orders");
   for (i = 0; i < buyLength; i++) {
     buyOrder = getOrderInfo(buyOrderKey);
     orderPrice = Number(buyOrder[3]);
     orderAmount = Number(buyOrder[4]);
-
-    console.log(orderPrice, " ", orderAmount);
+    status = buyOrder[5];
+    if (status == "partially filled") {
+      filled_percentage = buyOrder[6];
+      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "& filled");
+    } else
+      console.log(orderPrice, " ", orderAmount);
+      
     buyOrderKey = Exchange.getPrev(buyOrderKey);
   }
 
@@ -325,5 +331,9 @@ function displayAccountOrders(account) {
     orderStatus = accountOrder[5];
     console.log(orderType , " " , orderPrice , " " , orderAmount , " " , orderStatus);
   }
+}
+
+function marketSummary() {
+  
 }
 

@@ -376,6 +376,10 @@ contract Exchange {
         return orders[orderKey].amount;
     }
 
+    function getFilled(bytes32 orderKey) public view returns (uint) {
+        return orders[orderKey].filled_amount;
+    }
+
     function getAccount(bytes32 orderKey) public view returns (address) {
         return orders[orderKey].account;
     }
@@ -389,7 +393,8 @@ contract Exchange {
         return true;
     }
 
-    function partiallyFilled(bytes32 orderKey) public returns(bool) { 
+    function partiallyFilled(bytes32 orderKey, uint amount) public returns(bool) {
+        orders[orderKey].filled_amount = amount;
         orders[orderKey].status = 1;
         return true;
     }
