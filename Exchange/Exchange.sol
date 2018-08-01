@@ -8,6 +8,7 @@ contract Exchange {
         string getCurrencyName; 
         uint price; //for settle function changed from string to uint
         uint amount;
+        uint filled_amount;
         bytes32 prev; 
         bytes32 next;
         bytes32 status_prev; //in different list depending on status
@@ -382,6 +383,10 @@ contract Exchange {
         return orders[orderKey].amount;
     }
 
+    function getFilled(bytes32 orderKey) public view returns (uint) {
+        return orders[orderKey].filled_amount;
+    }
+
     function getAccount(bytes32 orderKey) public view returns (address) {
         return orders[orderKey].account;
     }
@@ -395,7 +400,8 @@ contract Exchange {
         return true;
     }
 
-    function partiallyFilled(bytes32 orderKey) public returns(bool) { 
+    function partiallyFilled(bytes32 orderKey, uint amount) public returns(bool) {
+        orders[orderKey].filled_amount = amount;
         orders[orderKey].status = 1;
         return true;
     }
