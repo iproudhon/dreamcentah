@@ -72,7 +72,7 @@ function sorted_iterate_reverse()
 function unlock() 
 {
   for(i = 0; i < eth.accounts.length; i++) {
-    personal.unlockAccount(eth.accounts[i], "pass", 36000);
+    personal.unlockAccount(eth.accounts[i], "1", 36000);
   } 
 }
 

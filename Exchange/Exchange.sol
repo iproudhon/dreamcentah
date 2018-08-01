@@ -102,7 +102,14 @@ contract Exchange {
     */
 
     function getMarketPrice() public view returns(uint marketPrice) {
-        //highest buy lowest sell average
+        if(length == 0) {
+	    return 0;
+	}
+
+	if(buy_length == 0 && sell_length == 0) {
+	    return orders[settled_tail].price;
+	}
+	
         marketPrice = (orders[buy_tail].price + orders[sell_head].price)/2;
         return marketPrice;
     }
@@ -399,5 +406,43 @@ contract Exchange {
 
     function accountOrder(address account, uint pos) public view returns(bytes32) {
         return accountOrders[account][pos];
+    }
+
+    function demo_inactiveSettle(bytes32 account) public {
+        bytes32 orderKey = getOrderKey();
+        
+        order memory ord1; 
+        orders[orderKey] = ord1;
+        orders[orderKey].orderKey = orderKey;
+        orders[orderKey].account = account;
+        orders[orderKey].giveCurrencyName = 'USD';
+        orders[orderKey].getCurrencyName = 'BitCoin';
+        orders[orderKey].price = 10;
+        orders[orderKey].settled = true;
+
+	orders[tail].next = orderKey;
+        orders[orderKey].prev = tail;
+        tail = orderKey;
+        
+        accountOrders[account] = orderKey;
+    }
+    
+    function demo_inactiveCancel(bytes32 account) public {
+        bytes32 orderKey = getOrderKey();
+        
+        order memory ord; 
+        orders[orderKey] = ord;
+        orders[orderKey].orderKey = orderKey;
+        orders[orderKey].account = account;
+        orders[orderKey].giveCurrencyName = 'USD';
+        orders[orderKey].getCurrencyName = 'BitCoin';
+        orders[orderKey].price = 10;
+        orders[orderKey].cancelled = true; 
+        
+	orders[tail].next = orderKey;
+        orders[orderKey].prev = tail;
+        tail = orderKey;
+
+        accountOrders[account] = orderKey;
     }
 }

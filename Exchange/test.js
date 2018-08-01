@@ -1,3 +1,34 @@
+function prePopulate() {
+  
+  for(i = 0; i<1000; i++)
+  {
+    personal.newAccount("1");
+    personal.unlockAccount(eth.accounts[i], "1", 36000);
+    deposit(eth.accounts[i], 'USD', 10000);
+    deposit(eth.accounts[i], 'BitCoin', 10000);
+    
+    var buy_ = Math.random()*4;
+    var sell_ = Math.random()*4;
+
+    for(j = 0; j<buy_; j++) {
+      //active orders make it random - buy/sell,  number of order to make(0-3), order price(6000-6500), amount(0-1000), 
+      var price = 6000 + Math.random()*500;
+      var amount = Math.random()*1000;
+      createLimitOrder(eth.accounts[i],'USD','BitCoin', pric, amou);
+    }
+
+    for(p = 0; p < sell_; p++) {
+      var price = 6000 + Math.random()*500;
+      var amount = Math.random()*1000;
+      createLimitOrder(eth.accounts[i],'BitCoin','USD', pri,amt )
+    }
+    
+    for(k = 0; k<100; k++) {
+      Exchange.demo_inactiveSettle(eth.accounts[i]);
+      Exchange.demo_inactiveCancel(eth.accounts[i]);
+    }
+  }
+}
 
 function initiateAccounts() {
   deposit(eth.accounts[0], 'USD', 10000);
