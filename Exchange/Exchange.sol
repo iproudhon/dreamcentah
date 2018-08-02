@@ -233,7 +233,7 @@ contract Exchange {
         return targetkey;
     }
     
-    function cancel(bytes32 targetkey) public { //consider race condition
+    function cancel (bytes32 targetkey) public { //consider race condition
         
         //to make sure that a targetkey can only be cancelled from the buy/sell lists
         if(orders[targetkey].status == 0)
@@ -363,7 +363,7 @@ contract Exchange {
     }
 
     function partiallyFilled(bytes32 orderKey, uint amount) public returns(bool) {
-        orders[orderKey].filled_amount = amount;
+        orders[orderKey].filled_amount += amount;
         orders[orderKey].status = 1;
         return true;
     }

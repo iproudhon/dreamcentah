@@ -140,10 +140,10 @@ function getMarketPrice() {
     var marketPrice = getOrderInfo(settled_tail)[3];
     return marketPrice;
   } else {
-    var buy_tail = Exchange.buy_tail();
-    var sell_head = Exchange.sell_head();
-    var buy_price = getOrderInfo(buy_tail)[3];
-    var sell_price = getOrderInfo(sell_head)[3];
+    var buy_head = Exchange.buy_head();
+    var sell_tail = Exchange.sell_tail();
+    var buy_price = getOrderInfo(buy_head)[3];
+    var sell_price = getOrderInfo(sell_tail)[3];
     var marketPrice = Math.round((buy_price + sell_price) / 2);
     return marketPrice;
   }
@@ -161,18 +161,24 @@ function settle() {
   var buyAccount;
   var sellAccount;
 
-  buyOrderKey = Exchange.buy_tail(); //highest buy price orderkey
-  sellOrderKey = Exchange.sell_head(); //lowest sel price order key 
+  buyOrderKey = Exchange.buy_head(); //highest buy price orderkey
+  sellOrderKey = Exchange.sell_tail(); //lowest sell price order key 
 
   buyPrice = Number(Exchange.getPrice(buyOrderKey));
   sellPrice = Number(Exchange.getPrice(sellOrderKey));
 
   while (buyPrice >= sellPrice && Exchange.sizes()[1] > 0 && Exchange.sizes()[2] > 0) { //buy Length and sell length both greater than 0
-
-    buyAmount = Number(Exchange.getAmount(buyOrderKey));
+    if (Number(Exchange.getStatus(buyOrderKey)) == 1)
+      buyAmount = Number(Exchange.getAmount(buyOrderKey)) - Number(Exchange.getFilled(buyOrderKey)); //remaining buy Order amount
+    else
+      buyAmount = Number(Exchange.getAmount(buyOrderKey));
+    
+    if (Number(Exchange.getStatus(sellOrderKey)) == 1)
+      sellAmount = Number(Exchange.getAmount(sellOrderKey)) - Number(Exchange.getFilled(sellOrderKey));
+    else
+      sellAmount = Number(Exchange.getAmount(sellOrderKey));  
+    
     buyAccount = Exchange.getAccount(buyOrderKey);
-
-    sellAmount = Number(Exchange.getAmount(sellOrderKey));
     sellAccount = Exchange.getAccount(sellOrderKey);
 
     if (buyAmount > sellAmount) {
@@ -183,10 +189,10 @@ function settle() {
       
       Exchange.partiallyFilled(buyOrderKey, sellAmount, {from:eth.accounts[0], gas:50000});
 
-      nextSellOrderKey = Exchange.getNext(sellOrderKey);
+      prevSellOrderKey = Exchange.getPrev(sellOrderKey);
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
 
-      sellOrderKey = nextSellOrderKey;
+      sellOrderKey = prevSellOrderKey;
       sellPrice = Number(Exchange.getPrice(sellOrderKey));
 
       mine();
@@ -201,10 +207,10 @@ function settle() {
       
       Exchange.partiallyFilled(sellOrderKey, buyAmount, {from:eth.accounts[0], gas:50000});
       
-      prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
+      nextBuyOrderKey = Exchange.getNext(buyOrderKey);
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
-      buyOrderKey = prevBuyOrderKey;
-      sellOrderKey = nextSellOrderKey;
+      
+      buyOrderKey = nextBuyOrderKey;
       buyPrice = Number(Exchange.getPrice(buyOrderKey));
 
       mine();
@@ -220,12 +226,12 @@ function settle() {
       Exchange.partiallyFilled(buyOrderKey, buyAmount, {from:eth.accounts[0], gas:500000}); //100% filled
       Exchange.partiallyFilled(sellOrderKey, sellAmount, {from:eth.accounts[0], gas:500000});
       
-      prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
-      nextSellOrderKey = Exchange.getNext(sellOrderKey);
+      nextBuyOrderKey = Exchange.getNext(buyOrderKey);
+      prevSellOrderKey = Exchange.getPrev(sellOrderKey);
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
-      buyOrderKey = prevBuyOrderKey; 
-      sellOrderKey = nextSellOrderKey;
+      buyOrderKey = nextBuyOrderKey; 
+      sellOrderKey = prevSellOrderKey;
       buyPrice = Number(Exchange.getPrice(buyOrderKey));
       sellPrice = Number(Exchange.getPrice(sellOrderKey));
       
@@ -279,7 +285,7 @@ function displayAllOpenOrders() {
 //buyOrders 
   var buyLength = Exchange.buy_length();
   var i;
-  var buyOrderKey = Exchange.buy_tail(); //from highest
+  var buyOrderKey = Exchange.buy_head(); //from highest
   var buyOrder;
   var orderPrice; 
   var orderAmount;
@@ -297,13 +303,13 @@ function displayAllOpenOrders() {
     } else
       console.log(orderPrice, " ", orderAmount);
       
-    buyOrderKey = Exchange.getPrev(buyOrderKey);
+    buyOrderKey = Exchange.getNext(buyOrderKey);
   }
 
 //sellOrders
   console.log("Sell Orders");
   var sellLength = Exchange.sell_length();
-  var sellOrderKey = Exchange.sell_head(); //from lowest
+  var sellOrderKey = Exchange.sell_tail(); //from lowest
   for (i = 0; i < sellLength; i++) {
     sellOrder = getOrderInfo(sellOrderKey);
     orderPrice = Number(sellOrder[3]);
@@ -315,7 +321,7 @@ function displayAllOpenOrders() {
     } else
       console.log(orderPrice, " ", orderAmount);
 
-    sellOrderKey = Exchange.getNext(sellOrderKey);
+    sellOrderKey = Exchange.getPrev(sellOrderKey);
   }
 }
 
@@ -326,7 +332,7 @@ function displayOpenOrders(buyLength, sellLength) { //displaying specified amoun
     sellLength = Exchange.sell_length();
 
   var i;
-  var buyOrderKey = Exchange.buy_tail(); //from highest
+  var buyOrderKey = Exchange.buy_head(); //from highest
   var buyOrder;
   var orderPrice; 
   var orderAmount;
@@ -344,13 +350,13 @@ function displayOpenOrders(buyLength, sellLength) { //displaying specified amoun
     } else
       console.log(orderPrice, " ", orderAmount);
       
-    buyOrderKey = Exchange.getPrev(buyOrderKey);
+    buyOrderKey = Exchange.getNext(buyOrderKey);
   }
 
 //sellOrders
   console.log("Displaying ", sellLength, " Sell Orders");
   var sellLength = Exchange.sell_length();
-  var sellOrderKey = Exchange.sell_head(); //from lowest
+  var sellOrderKey = Exchange.sell_tail(); //from lowest
   for (i = 0; i < sellLength; i++) {
     sellOrder = getOrderInfo(sellOrderKey);
     orderPrice = Number(sellOrder[3]);
@@ -362,7 +368,7 @@ function displayOpenOrders(buyLength, sellLength) { //displaying specified amoun
     } else
       console.log(orderPrice, " ", orderAmount);
 
-    sellOrderKey = Exchange.getNext(sellOrderKey);
+    sellOrderKey = Exchange.getPrev(sellOrderKey);
   }
 }
 
@@ -463,6 +469,7 @@ function cancelOrder(account, orderNumber) {
   var orderKey;
   orderKey = Exchange.accountOrder(account, orderNumber);
   cancel(orderKey);
+  mine();
 }
 
 function marketSummary() {
