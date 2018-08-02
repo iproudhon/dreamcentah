@@ -128,6 +128,27 @@ function createLimitOrder(account, giveCurrency, getCurrency, price, amount) {
   Exchange.createLimitOrder(account, orderkey, giveCurrency, getCurrency, price, amount, {from:eth.accounts[0], gas:1000000});
 }
 
+function createMarketOrder(account, giveCurrency, getCurrency, amount) {
+  var price = getMarketPrice();
+  var orderKey = Exchange.getOrderKey({from:eth.accounts[0], gas:50000});
+  Exchange.createLimitOrder(account, orderKey, giveCurrency, getCurrency, price, amount, {from:eth.accounts[0], gas:1000000});
+}
+
+function getMarketPrice() {
+  if (Exchange.buy_length() == 0|| Exchange.sell_length() == 0) {
+    var settled_tail = Exchange.settled_tail();
+    var marketPrice = getOrderInfo(settled_tail)[3];
+    return marketPrice;
+  } else {
+    var buy_tail = Exchange.buy_tail();
+    var sell_head = Exchange.sell_head();
+    var buy_price = getOrderInfo(buy_tail)[3];
+    var sell_price = getOrderInfo(sell_head)[3];
+    var marketPrice = Math.round((buy_price + sell_price) / 2);
+    return marketPrice;
+  }
+}
+
 function settle() {
   var settledOrderCount = 0; 
   var buyOrderKey;

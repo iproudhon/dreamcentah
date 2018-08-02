@@ -76,44 +76,6 @@ contract Exchange {
 
         return orderkey;
     }
-    
-    function createMarketOrder(
-        address account,
-        bytes32 orderkey,
-        string giveCurrencyName,
-        string getCurrencyName, 
-        uint amount
-    ) 
-        public returns (bool)
-    {
-        if (balance[giveCurrencyName][account] < amount) {
-            return false;
-        }
-        
-        uint price = getMarketPrice(); 
-        createLimitOrder(account, orderkey, giveCurrencyName, getCurrencyName, price, amount);
-    }
-    
-    /*
-    //implement after supporting multiple markets 
-    function getMarketPrice(string giveCurrencyName, string getCurrencyName) public returns(uint marketPrice) {
-        marketPrice = 0;
-        return marketPrice;
-    }
-    */
-
-    function getMarketPrice() public view returns(uint marketPrice) {
-        if (length == 0) {
-            return 0;
-	    }
-
-        if (buy_length == 0 && sell_length == 0) {
-            return orders[settled_tail].price;
-	    }
-	
-        marketPrice = (orders[buy_tail].price + orders[sell_head].price)/2;
-        return marketPrice;
-    }
 
     function insert(
         address account,
