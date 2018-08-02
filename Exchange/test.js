@@ -467,7 +467,6 @@ function cancel(orderKey) {
   if (orderStatus == "open") {
     Exchange.cancel(orderKey, {from:eth.accounts[0], gas:500000});
     console.log("Order cancelled");
-    mine();
   } else
     console.log("The order status must be open to cancel. current order status: ", orderStatus);
 }
