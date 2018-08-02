@@ -285,7 +285,7 @@ function displayAllOpenOrders() {
 //buyOrders 
   var buyLength = Exchange.buy_length();
   var i;
-  var buyOrderKey = Exchange.buy_head(); //from highest
+  var buyOrderKey = Exchange.buy_tail(); //from lowest
   var buyOrder;
   var orderPrice; 
   var orderAmount;
@@ -303,7 +303,7 @@ function displayAllOpenOrders() {
     } else
       console.log(orderPrice, " ", orderAmount);
       
-    buyOrderKey = Exchange.getNext(buyOrderKey);
+    buyOrderKey = Exchange.getPrev(buyOrderKey);
   }
 
 //sellOrders
@@ -332,7 +332,7 @@ function displayOpenOrders(buyLength, sellLength) { //displaying specified amoun
     sellLength = Exchange.sell_length();
 
   var i;
-  var buyOrderKey = Exchange.buy_head(); //from highest
+  var buyOrderKey = Exchange.buy_tail(); //from highest
   var buyOrder;
   var orderPrice; 
   var orderAmount;
@@ -350,7 +350,7 @@ function displayOpenOrders(buyLength, sellLength) { //displaying specified amoun
     } else
       console.log(orderPrice, " ", orderAmount);
       
-    buyOrderKey = Exchange.getNext(buyOrderKey);
+    buyOrderKey = Exchange.getPrev(buyOrderKey);
   }
 
 //sellOrders
