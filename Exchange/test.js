@@ -185,7 +185,7 @@ function settle() {
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
       
-      Exchange.partiallyFilled(buyOrderKey, sellAmount, {from:eth.accounts[0], gas:50000});
+      Exchange.partiallyFilled(buyOrderKey, sellAmount, {from:eth.accounts[0], gas:500000});
 
       nextSellOrderKey = Exchange.getNext(sellOrderKey);
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
@@ -203,7 +203,7 @@ function settle() {
       deposit(sellAccount, "USD", buyAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", buyAmount);
       
-      Exchange.partiallyFilled(sellOrderKey, buyAmount, {from:eth.accounts[0], gas:50000});
+      Exchange.partiallyFilled(sellOrderKey, buyAmount, {from:eth.accounts[0], gas:500000});
       
       prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
@@ -323,8 +323,6 @@ function displayAllOpenOrders() {
       
     buyOrderKey = Exchange.getPrev(buyOrderKey);
   }
-
-
 }
 
 function displayOpenOrders(buyLength, sellLength) { //displaying specified amount of orders
@@ -374,8 +372,6 @@ function displayOpenOrders(buyLength, sellLength) { //displaying specified amoun
       
     buyOrderKey = Exchange.getPrev(buyOrderKey);
   }
-
-
 }
 
 function displaySettledOrders() {
@@ -445,7 +441,10 @@ function displayAccountOrders(account) {
     orderPrice = Number(accountOrder[3]);
     orderAmount = Number(accountOrder[4]);
     orderStatus = accountOrder[5];
-    console.log(i, " ", orderType , " " , orderPrice , " " , orderAmount , " " , orderStatus);
+    if (orderStatus == "partially_filled")
+      console.log(i, " ", orderType , " " , orderPrice , " " , orderAmount , " " , orderStatus, " ", filled_percentage, "% filled");
+    else
+      console.log(i, " ", orderType , " " , orderPrice , " " , orderAmount , " " , orderStatus);
   }
 }
 
