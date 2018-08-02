@@ -134,10 +134,10 @@ function getMarketPrice() {
     var marketPrice = getOrderInfo(settled_tail)[3];
     return marketPrice;
   } else {
-    var buy_head = Exchange.buy_head();
-    var sell_tail = Exchange.sell_tail();
-    var buy_price = getOrderInfo(buy_head)[3];
-    var sell_price = getOrderInfo(sell_tail)[3];
+    var buy_tail = Exchange.buy_tail();
+    var sell_head = Exchange.sell_head();
+    var buy_price = getOrderInfo(buy_tail)[3];
+    var sell_price = getOrderInfo(sell_head)[3];
     
     if (buy_price < sell_price)
       return buy_price;
@@ -159,8 +159,8 @@ function settle() {
   var buyAccount;
   var sellAccount;
 
-  buyOrderKey = Exchange.buy_head(); //highest buy price orderkey
-  sellOrderKey = Exchange.sell_tail(); //lowest sell price order key 
+  buyOrderKey = Exchange.buy_tail(); //highest buy price orderkey
+  sellOrderKey = Exchange.sell_head(); //lowest sell price order key 
 
   buyPrice = Number(Exchange.getPrice(buyOrderKey));
   sellPrice = Number(Exchange.getPrice(sellOrderKey));
@@ -187,10 +187,10 @@ function settle() {
       
       Exchange.partiallyFilled(buyOrderKey, sellAmount, {from:eth.accounts[0], gas:50000});
 
-      prevSellOrderKey = Exchange.getPrev(sellOrderKey);
+      nextSellOrderKey = Exchange.getNext(sellOrderKey);
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
 
-      sellOrderKey = prevSellOrderKey;
+      sellOrderKey = nextSellOrderKey;
       sellPrice = Number(Exchange.getPrice(sellOrderKey));
 
       mine();
@@ -205,10 +205,10 @@ function settle() {
       
       Exchange.partiallyFilled(sellOrderKey, buyAmount, {from:eth.accounts[0], gas:50000});
       
-      nextBuyOrderKey = Exchange.getNext(buyOrderKey);
+      prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
       
-      buyOrderKey = nextBuyOrderKey;
+      buyOrderKey = prevBuyOrderKey;
       buyPrice = Number(Exchange.getPrice(buyOrderKey));
 
       mine();
@@ -224,12 +224,12 @@ function settle() {
       Exchange.partiallyFilled(buyOrderKey, buyAmount, {from:eth.accounts[0], gas:500000}); //100% filled
       Exchange.partiallyFilled(sellOrderKey, sellAmount, {from:eth.accounts[0], gas:500000});
       
-      nextBuyOrderKey = Exchange.getNext(buyOrderKey);
-      prevSellOrderKey = Exchange.getPrev(sellOrderKey);
+      prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
+      nextSellOrderKey = Exchange.getNext(sellOrderKey);
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
-      buyOrderKey = nextBuyOrderKey; 
-      sellOrderKey = prevSellOrderKey;
+      buyOrderKey = prevBuyOrderKey; 
+      sellOrderKey = NextSellOrderKey;
       buyPrice = Number(Exchange.getPrice(buyOrderKey));
       sellPrice = Number(Exchange.getPrice(sellOrderKey));
       
@@ -280,7 +280,7 @@ function getOrderInfo(orderKey) {
 }
 
 function displayAllOpenOrders() {
-//buyOrders 
+ 
   var buyLength = Exchange.buy_length();
   var i;
   var buyOrderKey = Exchange.buy_tail(); //from lowest
@@ -289,22 +289,8 @@ function displayAllOpenOrders() {
   var orderAmount;
   var status;
   var filled_percentage;
-  console.log("Buy Orders");
-  for (i = 0; i < buyLength; i++) {
-    buyOrder = getOrderInfo(buyOrderKey);
-    orderPrice = Number(buyOrder[3]);
-    orderAmount = Number(buyOrder[4]);
-    status = buyOrder[5];
-    if (status == "partially filled") {
-      filled_percentage = buyOrder[6];
-      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "% filled");
-    } else
-      console.log(orderPrice, " ", orderAmount);
-      
-    buyOrderKey = Exchange.getPrev(buyOrderKey);
-  }
 
-//sellOrders
+  //sellOrders
   console.log("Sell Orders");
   var sellLength = Exchange.sell_length();
   var sellOrderKey = Exchange.sell_tail(); //from lowest
@@ -321,6 +307,24 @@ function displayAllOpenOrders() {
 
     sellOrderKey = Exchange.getPrev(sellOrderKey);
   }
+
+  //buyOrders
+  console.log("Buy Orders");
+  for (i = 0; i < buyLength; i++) {
+    buyOrder = getOrderInfo(buyOrderKey);
+    orderPrice = Number(buyOrder[3]);
+    orderAmount = Number(buyOrder[4]);
+    status = buyOrder[5];
+    if (status == "partially filled") {
+      filled_percentage = buyOrder[6];
+      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "% filled");
+    } else
+      console.log(orderPrice, " ", orderAmount);
+      
+    buyOrderKey = Exchange.getPrev(buyOrderKey);
+  }
+
+
 }
 
 function displayOpenOrders(buyLength, sellLength) { //displaying specified amount of orders
@@ -336,22 +340,8 @@ function displayOpenOrders(buyLength, sellLength) { //displaying specified amoun
   var orderAmount;
   var status;
   var filled_percentage;
-  console.log("Displaying ", buyLength, " Buy Orders");
-  for (i = 0; i < buyLength; i++) {
-    buyOrder = getOrderInfo(buyOrderKey);
-    orderPrice = Number(buyOrder[3]);
-    orderAmount = Number(buyOrder[4]);
-    status = buyOrder[5];
-    if (status == "partially filled") {
-      filled_percentage = buyOrder[6];
-      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "% filled");
-    } else
-      console.log(orderPrice, " ", orderAmount);
-      
-    buyOrderKey = Exchange.getPrev(buyOrderKey);
-  }
 
-//sellOrders
+  //sellOrders
   console.log("Displaying ", sellLength, " Sell Orders");
   var sellLength = Exchange.sell_length();
   var sellOrderKey = Exchange.sell_tail(); //from lowest
@@ -368,6 +358,24 @@ function displayOpenOrders(buyLength, sellLength) { //displaying specified amoun
 
     sellOrderKey = Exchange.getPrev(sellOrderKey);
   }
+
+  //buyOrders
+  console.log("Displaying ", buyLength, " Buy Orders");
+  for (i = 0; i < buyLength; i++) {
+    buyOrder = getOrderInfo(buyOrderKey);
+    orderPrice = Number(buyOrder[3]);
+    orderAmount = Number(buyOrder[4]);
+    status = buyOrder[5];
+    if (status == "partially filled") {
+      filled_percentage = buyOrder[6];
+      console.log(orderPrice, " ", orderAmount, " ", filled_percentage, "% filled");
+    } else
+      console.log(orderPrice, " ", orderAmount);
+      
+    buyOrderKey = Exchange.getPrev(buyOrderKey);
+  }
+
+
 }
 
 function displaySettledOrders() {
