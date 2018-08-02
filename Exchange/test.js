@@ -217,8 +217,8 @@ function settle() {
       deposit(sellAccount, "USD", sellAmount * buyPrice);
       withdraw(sellAccount, "BitCoin", sellAmount);
       
-      Exchange.partiallyFilled(buyOrder, buyAmount, {from:eth.accounts[0], gas:500000}); //100% filled
-      Exchange.partiallyFilled(sellOrder, sellAmount, {from:eth.accounts[0], gas:500000});
+      Exchange.partiallyFilled(buyOrderKey, buyAmount, {from:eth.accounts[0], gas:500000}); //100% filled
+      Exchange.partiallyFilled(sellOrderKey, sellAmount, {from:eth.accounts[0], gas:500000});
       
       prevBuyOrderKey = Exchange.getPrev(buyOrderKey);
       nextSellOrderKey = Exchange.getNext(sellOrderKey);
