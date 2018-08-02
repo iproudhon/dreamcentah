@@ -229,7 +229,7 @@ function settle() {
       Exchange.putSettle(buyOrderKey, {from: eth.accounts[0], gas:500000});
       Exchange.putSettle(sellOrderKey, {from: eth.accounts[0], gas:500000});
       buyOrderKey = prevBuyOrderKey; 
-      sellOrderKey = NextSellOrderKey;
+      sellOrderKey = nextSellOrderKey;
       buyPrice = Number(Exchange.getPrice(buyOrderKey));
       sellPrice = Number(Exchange.getPrice(sellOrderKey));
       
