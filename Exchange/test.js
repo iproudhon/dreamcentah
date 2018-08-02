@@ -1,29 +1,44 @@
-function prePopulate() {
-  
-  for(i = 0; i<1000; i++)
-  {
+function createAccounts() {
+  for (i = 0; i < 1000; i++)
     personal.newAccount("1");
-    personal.unlockAccount(eth.accounts[i], "1", 36000);
+  for (i = 0; i < 1000; i++)
+    personal.unlockAccount(eth.accounts[i], "1", 36000);  
+} 
+
+function depositAccounts() { 
+  for (i = 0; i < 1000; i++) {
     deposit(eth.accounts[i], 'USD', 10000);
     deposit(eth.accounts[i], 'BitCoin', 10000);
-    
-    var buy_ = Math.random()*4;
-    var sell_ = Math.random()*4;
+  }
+}
 
-    for(j = 0; j<buy_; j++) {
+function prePopulate() {
+  var price;
+  var amount;
+  miner.start(1);
+  for(i = 0; i<1000; i++) {
+    var buy_ = Math.floor(Math.random()*4);
+    var sell_ = Math.floor(Math.random()*4);
+
+    for(var j = 0; j < buy_; j++) {
       //active orders make it random - buy/sell,  number of order to make(0-3), order price(6000-6500), amount(0-1000), 
-      var price = 6000 + Math.random()*500;
-      var amount = Math.random()*1000;
-      createLimitOrder(eth.accounts[i],'USD','BitCoin', pric, amou);
+      price = Math.floor(6000 + Math.random()*500);
+      amount = Math.floor(Math.random()*1000);
+      createLimitOrder(eth.accounts[i],'USD','BitCoin', price, amount);
     }
 
-    for(p = 0; p < sell_; p++) {
-      var price = 6000 + Math.random()*500;
-      var amount = Math.random()*1000;
-      createLimitOrder(eth.accounts[i],'BitCoin','USD', pri,amt )
+    for(var p = 0; p < sell_; p++) {
+      price = 6000 + Math.floor(Math.random()*500);
+      amount = Math.floor(Math.random()*1000);
+      createLimitOrder(eth.accounts[i],'BitCoin','USD', price, amount )
     }
-    
-    for(k = 0; k<100; k++) {
+  }
+  miner.stop();
+}
+
+function populateInactive() {
+  for (i = 0; i < 1000; i++) {
+    for(var k = 0; k<100; k++) {
       Exchange.demo_inactiveSettle(eth.accounts[i]);
       Exchange.demo_inactiveCancel(eth.accounts[i]);
     }
@@ -65,9 +80,6 @@ function testOrders1() {
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 1);
   mine();
-  settle();
-  console.log('After settling');
-  showBalance();
 }
 
 
@@ -76,18 +88,12 @@ function testOrders2() {
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1000, 1);  
   createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 1);
   mine();
-  settle();
-  console.log('After settling');
-  showBalance();
 }
 
 function testOrders3() {
   createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 1000, 1);
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1100, 1);
   mine();
-  settle();
-  console.log('After settling');
-  showBalance();
 }
 
 function testOrders4() {
@@ -95,9 +101,6 @@ function testOrders4() {
   createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 1200, 1);
   createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1100, 1);
   mine();
-  settle();
-  console.log('After settling');
-  showBalance();
 }
 
 function testOrders5() {
@@ -106,42 +109,12 @@ function testOrders5() {
   createLimitOrder(eth.accounts[2], 'USD', 'BitCoin', 1100, 1);
   createLimitOrder(eth.accounts[3], 'BitCoin', 'USD', 900, 3);
   mine();
-  settle();
-  console.log('After settling');
-  showBalance();
 }
 
-function testOrders8() {
-  showBalance();
-  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', , 5);
-  createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', , 5);
-  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 2);
+function testOrders6() {
+  createMarketOrder(eth.accounts[0], 'USD', 'BitCoin', 5);
+  createMarketOrder(eth.accounts[1], 'BitCoin', 'USD', 5);
   mine();
-  settle();
-  console.log('After settling');
-  showBalance();
-}
-
-function testOrders7() {
-  showBalance();
-  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 0, 1);
-  createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 100, 1);
-  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 2);
-  mine();
-  settle();
-  console.log('After settling');
-  showBalance();
-}
-
-function testOrders8() {
-  showBalance();
-  createLimitOrder(eth.accounts[0], 'USD', 'BitCoin', 0, 1);
-  createLimitOrder(eth.accounts[1], 'BitCoin', 'USD', 100, 1);
-  createLimitOrder(eth.accounts[2], 'BitCoin', 'USD', 1000, 2);
-  mine();
-  settle();
-  console.log('After settling');
-  showBalance();
 }
 
 function createLimitOrder(account, giveCurrency, getCurrency, price, amount) {
