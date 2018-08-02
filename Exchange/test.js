@@ -451,7 +451,7 @@ function accountSummary(account) {
 }
 
 function cancel(orderKey) {
-  var orderStatus = Exchange.getOrderInfo(orderKey)[5];
+  var orderStatus = getOrderInfo(orderKey)[5];
   if (orderStatus == "open") {
     Exchange.cancel(orderKey, {from:eth.accounts[0], gas:500000});
     console.log("Order cancelled");
