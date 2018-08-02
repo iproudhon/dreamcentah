@@ -470,8 +470,8 @@ function marketSummary() {
   var sellLength;
   var marketPrice; 
 
-  Exchange.sizes()[1] = sellLength;
-  Exchange.sizes()[2] = buyLength;
+  sellLength = Exchange.sizes()[1];
+  buyLength = Exchange.sizes()[2];
   console.log("Total ", buyLength, " buy orders, ", sellLength, " sell orders");
   displayOpenOrders(10, 10); //displaying 10 buy orders, 10 sell orders 
   
