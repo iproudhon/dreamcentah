@@ -138,6 +138,10 @@ function getMarketPrice() {
     var sell_tail = Exchange.sell_tail();
     var buy_price = getOrderInfo(buy_head)[3];
     var sell_price = getOrderInfo(sell_tail)[3];
+    
+    if (buy_price < sell_price)
+      return buy_price;
+  
     var marketPrice = Math.round((buy_price + sell_price) / 2);
     return marketPrice;
   }
