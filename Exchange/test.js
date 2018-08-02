@@ -475,7 +475,7 @@ function marketSummary() {
   console.log("Total ", buyLength, " buy orders, ", sellLength, " sell orders");
   displayOpenOrders(10, 10); //displaying 10 buy orders, 10 sell orders 
   
-  marketPrice = Number(Exchange.getMarketPrice());
+  marketPrice = Number(getMarketPrice());
 
   console.log("Market Price: ", marketPrice);
 }
