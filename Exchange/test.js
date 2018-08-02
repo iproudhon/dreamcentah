@@ -139,7 +139,7 @@ function getMarketPrice() {
     var buy_price = getOrderInfo(buy_tail)[3];
     var sell_price = getOrderInfo(sell_head)[3];
     
-    if (buy_price < sell_price)
+    if (buy_price > sell_price)
       return buy_price;
   
     var marketPrice = Math.round((buy_price + sell_price) / 2);
